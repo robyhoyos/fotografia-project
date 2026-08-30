@@ -1,12 +1,14 @@
 // src/main/services/pdf.service.ts
 // Service para generar PDFs de recibos de pago.
-// Rediseño minimalista y moderno:
-// - Cuadrícula Cliente | Evento para equilibrar el espacio en blanco
-// - Jerarquía tipográfica: etiquetas gris medio (#6b7280) / valores gris oscuro (#111827)
+//
+// Dirección de diseño (frontend-design):
+// - Masthead editorial: wordmark con tracking amplio, número de recibo y sumario de emisión
+// - Tinta casi negra (#0f172a) + acento configurable; grises tipo pizarra para etiquetas
+// - Tarjeta de información Cliente/Evento sobre fondo #f8fafc con regla de acento superior
+// - Marcadores de sección con cuadrado de acento (jerarquía estructural real)
+// - Caja RESUMEN DE PAGO con barra lateral de acento y jerarquía de montos
+// - Respiración espacial generosa; tablas con divisorias sutiles y montos tabulares a la derecha
 // - Fallbacks: datos faltantes o fechas inválidas → "No especificado" en cursiva gris
-// - Tablas (Detalle y Transacciones) con divisorias sutiles (#e5e7eb) y montos a la derecha
-// - Badges de estado con fondos suaves (sin verdes/rojos puros)
-// - Caja de totales alineada a la derecha para lectura de un vistazo
 
 import PDFDocument from 'pdfkit'
 import fs from 'fs'
@@ -41,21 +43,21 @@ interface ReceiptData {
 }
 
 // ─── Tokens de diseño ──────────────────────────────────────────────
-// Fuente sans-serif limpia (Helvetica, embebida en PDF).
 const FONT = 'Helvetica'
 const FONT_BOLD = 'Helvetica-Bold'
 const FONT_OBLIQUE = 'Helvetica-Oblique'
 
-const C_VALUE = '#111827' // valores de datos (gris oscuro)
-const C_LABEL = '#6b7280' // etiquetas (gris medio)
-const C_MUTED = '#9ca3af' // "No especificado" / texto secundario
-const C_BORDER = '#e5e7eb' // divisorias sutiles
-const C_CARD = '#f9fafb' // fondo de la caja de totales
-const GREEN_TEXT = '#16a34a' // monto pagado
-const RED_TEXT = '#dc2626' // saldo pendiente (deuda)
+const C_INK = '#0f172a' // tinta principal (títulos / encabezados)
+const C_VALUE = '#111827' // valores de datos
+const C_LABEL = '#64748b' // etiquetas (pizarra)
+const C_MUTED = '#94a3b8' // secundario / "No especificado"
+const C_BORDER = '#e2e8f0' // divisorias sutiles
+const C_CARD = '#f8fafc' // fondo de superficie
+const GREEN_TEXT = '#16a34a'
+const RED_TEXT = '#dc2626'
 const FALLBACK = 'No especificado'
 
-// Badges de estado — fondos suaves con texto oscuro (sin colores puros)
+// Badges de estado — fondos suaves con texto oscuro
 const BG_GREEN = '#dcfce7'
 const TXT_GREEN = '#15803d'
 const BG_RED = '#fee2e2'
@@ -97,8 +99,7 @@ function has(value?: string | null): boolean {
 
 /**
  * @function formatDate
- * @description Formatea una fecha ISO. Devuelve '' si la fecha es inválida
- * (evita renderizar "Invalid Date"; el render lo muestra como "No especificado").
+ * @description Formatea una fecha ISO. Devuelve '' si la fecha es inválida.
  */
 function formatDate(iso: string, opts: Intl.DateTimeFormatOptions): string {
   const date = new Date(iso)
@@ -150,17 +151,17 @@ export async function generateReceiptPDF(
 
     // ─── Helpers de dibujo ─────────────────────────────────────
 
-    const drawHR = (y: number) => {
-      doc.moveTo(MARGIN, y).lineTo(RIGHT, y).strokeColor(C_BORDER).lineWidth(0.75).stroke()
+    const drawHR = (y: number, color = C_BORDER, width = 0.75) => {
+      doc.moveTo(MARGIN, y).lineTo(RIGHT, y).strokeColor(color).lineWidth(width).stroke()
     }
 
-    // Etiqueta (gris medio #6b7280, pequeña, mayúscula)
+    // Etiqueta: minúsculas mayúsculas, pizarra, tracking amplio
     const label = (x: number, y: number, text: string, width: number) => {
       doc.font(FONT_BOLD).fontSize(8).fillColor(C_LABEL)
-        .text(text.toUpperCase(), x, y, { width, characterSpacing: 0.6, lineBreak: false })
+        .text(text.toUpperCase(), x, y, { width, characterSpacing: 0.9, lineBreak: false })
     }
 
-    // Valor de dato (gris oscuro #111827). Si falta → "No especificado" en cursiva gris.
+    // Valor de dato. Si falta → "No especificado" en cursiva gris.
     const value = (x: number, y: number, text: string | null | undefined, width: number) => {
       const missing = !has(text)
       doc
@@ -170,20 +171,21 @@ export async function generateReceiptPDF(
         .text(missing ? FALLBACK : (text as string), x, y, { width, lineBreak: false })
     }
 
-    // Monto monetario (alineado a la derecha)
+    // Monto monetario tabular alineado a la derecha
     const amountValue = (x: number, y: number, amount: number, width: number) => {
       doc.font(FONT_BOLD).fontSize(10.5).fillColor(C_VALUE)
         .text(formatCOP(amount), x, y, { width, align: 'right', lineBreak: false })
     }
 
-    const sectionLabel = (y: number, text: string) => {
-      label(MARGIN, y, text, CONTENT_W)
+    // Marcador de sección: cuadrado de acento + etiqueta
+    const sectionMarker = (y: number, text: string) => {
+      doc.rect(MARGIN, y, 5, 5).fillColor(accent).fill()
+      label(MARGIN + 11, y - 2.5, text, CONTENT_W - 11)
     }
 
-    // Badge de estado: fondo redondeado suave + texto oscuro
+    // Badge de estado: píldora con fondo suave y texto oscuro
     const badge = (x: number, y: number, text: string, bg: string, fg: string) => {
-      doc.font(FONT_BOLD).fontSize(7.5)
-      const w = doc.widthOfString(text.toUpperCase()) + 20
+      const w = doc.font(FONT_BOLD).fontSize(7).widthOfString(text.toUpperCase()) + 22
       const h = 16
       doc.roundedRect(x, y, w, h, 8).fillColor(bg).fill()
       doc
@@ -191,64 +193,76 @@ export async function generateReceiptPDF(
         .strokeColor(C_BORDER)
         .lineWidth(0.75)
         .stroke()
-      doc.fillColor(fg).text(text.toUpperCase(), x + 10, y + 4.5, { width: w, lineBreak: false })
+      doc.fillColor(fg).text(text.toUpperCase(), x + 11, y + 4.5, { width: w, characterSpacing: 0.6, lineBreak: false })
       return w
     }
 
-    // ─── Encabezado de marca ────────────────────────────────────
-    let y = 45
+    // ─── Emisión: número de recibo derivado de la fecha/hora ────
+    const now = new Date()
+    const pad = (n: number) => String(n).padStart(2, '0')
+    const invoiceNo = `REC-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`
 
-    // Marca (izquierda)
-    doc.font(FONT_BOLD).fontSize(20).fillColor(accent)
-      .text(brandName.toUpperCase(), MARGIN, y, { width: 200, lineBreak: false })
-    doc.font(FONT).fontSize(9).fillColor(C_LABEL)
-      .text(brandTagline, MARGIN, y + 23, { width: 260, lineBreak: false })
+    // ─── Masthead ────────────────────────────────────────────────
+    let y = 42
 
-    // Título del recibo (derecha)
-    doc.font(FONT_BOLD).fontSize(13).fillColor(C_VALUE)
-      .text('RECIBO DE PAGO', 330, y, { width: 215, align: 'right', lineBreak: false })
-    doc.font(FONT).fontSize(9).fillColor(C_LABEL)
-      .text(
-        `Emitido: ${formatDate(new Date().toISOString(), { day: '2-digit', month: 'long', year: 'numeric' })}`,
-        330,
-        y + 20,
-        { width: 215, align: 'right', lineBreak: false }
-      )
+    // Marca (izquierda): acento en el rombo, wordmark con tracking
+    doc.circle(MARGIN + 4, y + 9, 2.6).fillColor(accent).fill()
+    doc.font(FONT_BOLD).fontSize(21).fillColor(C_INK)
+      .text(brandName.toUpperCase(), MARGIN + 13, y, { width: 240, characterSpacing: 1.4, lineBreak: false })
+    doc.font(FONT).fontSize(8).fillColor(C_LABEL)
+      .text(brandTagline.toUpperCase(), MARGIN + 13, y + 24, { width: 260, characterSpacing: 1.6, lineBreak: false })
 
-    y += 50
+    // Título del recibo (derecha) con tab de acento
+    doc.rect(RIGHT - 30, y - 4, 30, 3).fillColor(accent).fill()
+    doc.font(FONT_BOLD).fontSize(15).fillColor(C_INK)
+      .text('RECIBO DE PAGO', 320, y + 6, { width: 225, align: 'right', characterSpacing: 1, lineBreak: false })
+    doc.font(FONT).fontSize(8.5).fillColor(C_MUTED)
+      .text(`Emitido: ${formatDate(now.toISOString(), { day: '2-digit', month: 'long', year: 'numeric' })}`, 320, y + 26, { width: 225, align: 'right', lineBreak: false })
+    doc.font(FONT_BOLD).fontSize(8.5).fillColor(C_LABEL)
+      .text(invoiceNo, 320, y + 38, { width: 225, align: 'right', characterSpacing: 0.6, lineBreak: false })
+
+    y += 58
     drawHR(y)
-    y += 20
+    y += 18
 
-    // ─── Cuadrícula de datos: Cliente (izq) | Evento (der) ──────
-    const colL = MARGIN
-    const colR = 320
-    const colW = 225
+    // ─── Tarjeta Cliente | Evento ───────────────────────────────
+    const cardY = y
+    const cardH = 150
+    const innerLeft = MARGIN + 18
+    const innerTop = cardY + 18
+    const colL = innerLeft
+    const colR = 350
+    const colW = 175
 
-    const infoRow = (
-      rowY: number,
-      leftLabelText: string,
-      leftValue: string | null | undefined,
-      rightLabelText: string,
-      rightValue: string | null | undefined
-    ) => {
-      label(colL, rowY, leftLabelText, colW)
-      value(colL, rowY + 10, leftValue, colW)
-      label(colR, rowY, rightLabelText, colW)
-      value(colR, rowY + 10, rightValue, colW)
+    // Superficie con regla de acento superior
+    doc.roundedRect(MARGIN, cardY, CONTENT_W, cardH, 12).fillColor(C_CARD).fill()
+    doc.rect(MARGIN + 12, cardY + 1, CONTENT_W - 24, 2).fillColor(accent).fill()
+
+    doc.font(FONT_BOLD).fontSize(7.5).fillColor(C_LABEL)
+      .text('CLIENTE', colL, innerTop, { width: colW, characterSpacing: 1.2, lineBreak: false })
+      .text('EVENTO', colR, innerTop, { width: colW, characterSpacing: 1.2, lineBreak: false })
+
+    // Divisor vertical sutil dentro de la tarjeta
+    doc.moveTo(332, innerTop - 2).lineTo(332, cardY + cardH - 12)
+      .strokeColor(C_BORDER).lineWidth(0.75).stroke()
+
+    const cell = (rowIndex: number, lLabel: string, lValue: string | null | undefined, rLabel: string, rValue: string | null | undefined) => {
+      const ry = innerTop + 10 + rowIndex * 30
+      label(colL, ry, lLabel, colW)
+      value(colL, ry + 10, lValue, colW)
+      label(colR, ry, rLabel, colW)
+      value(colR, ry + 10, rValue, colW)
     }
 
-    infoRow(y, 'Nombre', data.participantName, 'Evento', data.eventName)
-    y += 34
-    infoRow(y, 'Teléfono', data.participantPhone, 'Fecha', formatDate(data.eventDate, { day: '2-digit', month: 'long', year: 'numeric' }))
-    y += 34
-    infoRow(y, 'Email', data.participantEmail, 'Lugar', data.eventLocation)
-    y += 34
-    label(colL, y, 'Cédula', colW)
-    value(colL, y + 10, data.participantCedula, colW)
-    y += 32 // margen inferior del bloque Cliente/Evento antes de la tabla
+    cell(0, 'Nombre', data.participantName, 'Evento', data.eventName)
+    cell(1, 'Teléfono', data.participantPhone, 'Fecha', formatDate(data.eventDate, { day: '2-digit', month: 'long', year: 'numeric' }))
+    cell(2, 'Email', data.participantEmail, 'Lugar', data.eventLocation)
+    cell(3, 'Cédula', data.participantCedula, '—', null)
+
+    y = cardY + cardH + 24
 
     // ─── Tabla: Detalle de la compra ─────────────────────────────
-    sectionLabel(y, 'Detalle de la compra')
+    sectionMarker(y, 'Detalle de la compra')
     y += 18
 
     const detCols = [
@@ -276,7 +290,7 @@ export async function generateReceiptPDF(
     amountValue(detCols[3].x, y, data.totalCost, detCols[3].w)
 
     y += 20
-    drawHR(y)
+    drawHR(y, accent, 1)
     y += 28 // margen inferior de la tabla Detalle
 
     // ─── Caja de totales: Resumen de Pago (derecha) ─────────────
@@ -290,25 +304,27 @@ export async function generateReceiptPDF(
         ? { text: 'Pago parcial', bg: BG_AMBER, fg: TXT_AMBER }
         : { text: 'Pendiente', bg: BG_RED, fg: TXT_RED }
 
-    const boxH = 108
-    doc.roundedRect(boxX, y, boxW, boxH, 10).fillColor(C_CARD).fill()
-    doc.roundedRect(boxX, y, boxW, boxH, 10).strokeColor(C_BORDER).lineWidth(1).stroke()
+    const boxH = 110
+    doc.roundedRect(boxX, y, boxW, boxH, 12).fillColor(C_CARD).fill()
+    doc.roundedRect(boxX, y, boxW, boxH, 12).strokeColor(C_BORDER).lineWidth(1).stroke()
+    // Barra lateral de acento
+    doc.rect(boxX + 1, y + 8, 3, boxH - 16).fillColor(accent).fill()
 
     doc.font(FONT_BOLD).fontSize(8).fillColor(C_LABEL)
-      .text('RESUMEN DE PAGO', boxX + 14, y + 14, { width: 120, lineBreak: false })
+      .text('Resumen de pago'.toUpperCase(), boxX + 16, y + 14, { width: 140, characterSpacing: 1, lineBreak: false })
     badge(boxX + boxW - 110, y + 12, status.text, status.bg, status.fg)
 
     const boxRow = (rowY: number, text: string, amount: number, bold = false, color = C_VALUE) => {
       doc.font(FONT).fontSize(8).fillColor(C_LABEL)
-        .text(text, boxX + 14, rowY, { width: 130, lineBreak: false })
+        .text(text, boxX + 16, rowY, { width: 130, lineBreak: false })
       doc
         .font(bold ? FONT_BOLD : FONT)
         .fontSize(10.5)
         .fillColor(color)
-        .text(formatCOP(amount), boxX + 14, rowY - 1, { width: boxW - 28, align: 'right', lineBreak: false })
+        .text(formatCOP(amount), boxX + 16, rowY - 1, { width: boxW - 32, align: 'right', lineBreak: false })
     }
 
-    const boxInnerY = y + 34
+    const boxInnerY = y + 36
     boxRow(boxInnerY, 'Total a pagar', data.totalCost, false, C_VALUE)
     boxRow(
       boxInnerY + 22,
@@ -318,13 +334,13 @@ export async function generateReceiptPDF(
       data.paidAmount > 0 ? GREEN_TEXT : C_VALUE
     )
     doc
-      .moveTo(boxX + 14, boxInnerY + 44)
-      .lineTo(boxX + boxW - 14, boxInnerY + 44)
+      .moveTo(boxX + 16, boxInnerY + 44)
+      .lineTo(boxX + boxW - 16, boxInnerY + 44)
       .strokeColor(C_BORDER)
       .lineWidth(0.75)
       .stroke()
     boxRow(
-      boxInnerY + 56,
+      boxInnerY + 58,
       'Pendiente',
       data.outstanding,
       true,
@@ -335,7 +351,7 @@ export async function generateReceiptPDF(
 
     // ─── Tabla: Transacciones ───────────────────────────────────
     if (data.payments.length > 0) {
-      sectionLabel(y, 'Transacciones')
+      sectionMarker(y, 'Transacciones')
       y += 14
 
       const txCols = [
@@ -375,11 +391,12 @@ export async function generateReceiptPDF(
 
     doc.font(FONT).fontSize(8).fillColor(C_MUTED)
       .text(
-        `Recibo generado el ${formatDate(new Date().toISOString(), { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`,
+        `Recibo generado el ${formatDate(now.toISOString(), { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`,
         MARGIN, footerY + 10,
         { align: 'center' }
       )
-      .text(`${brandName} — ${brandTagline}`, MARGIN, footerY + 24, { align: 'center' })
+    doc.font(FONT_BOLD).fontSize(8.5).fillColor(C_LABEL)
+      .text(`${brandName.toUpperCase()} — ${brandTagline.toUpperCase()}`, MARGIN, footerY + 24, { align: 'center', characterSpacing: 0.8 })
 
     doc.end()
 
