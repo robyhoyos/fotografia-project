@@ -1,0 +1,22 @@
+node_modules/
+dist/
+*.db
+*.db-journal
+.env
+.DS_Store
+Thumbs.db
+test-results/
+playwright-report/
+playwright-report-real/
+playwright/.cache/
+
+# Archivos personales / entorno local
+dev.log
+audio 1.txt
+audio 2.txt
+error creacion evento.jpg
+LISTA PRIMERAS COMUNIONES DICIEMBRE 13 Y 14.docx
+Product_Backlog_Fotografia.xlsx
+historias de usuario.docx
+pasos que realizo para la appp.docx
+exportacion documentos/

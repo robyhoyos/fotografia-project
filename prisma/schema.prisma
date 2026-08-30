@@ -1,0 +1,195 @@
+// prisma/schema.prisma
+// Esquema de base de datos para la aplicación de gestión fotográfica.
+// Soporta tres categorías de eventos: Sacramental, Escolar y Estudio,
+// cada una con sus subtipos específicos.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Categorías de Evento ────────────────────────────────────────────
+// Clasifican los eventos en dominios amplios para filtrado y reportes.
+
+enum EventCategory {
+  SACRAMENTAL
+  ESCOLAR
+  ESTUDIO
+}
+
+// ─── Subtipos de Evento ──────────────────────────────────────────────
+// Subcategorías que dependen de una categoría padre (HU-B4).
+
+enum EventSubtype {
+  // Sacramental
+  BODA
+  COMUNION
+  BAUTIZO
+  CONFIRMACION
+  // Escolar
+  RETRATO_GRUPO
+  ANUARIO
+  GRADUACION
+  // Estudio
+  RETRATO_FAMILIAR
+  RETRATO_INDIVIDUAL
+  BOOK_FOTOGRAFICO
+  EVENTO_CORPORATIVO
+}
+
+// ─── Estados de un Participante ──────────────────────────────────────
+// Controla el flujo de entrega y pago de cada cliente.
+
+enum ParticipantStatus {
+  PENDIENTE
+  EN_PROCESO
+  ENTREGADO
+  CANCELADO
+}
+
+enum PaymentStatus {
+  SIN_PAGO
+  PAGO_PARCIAL
+  PAGO_TOTAL
+}
+
+// ─── Modelo: Evento ─────────────────────────────────────────────────
+// Representa una sesión fotográfica o evento programado.
+// Un evento puede tener múltiples participantes (ej: 100 alumnos en una comunión).
+
+model Event {
+  id          String          @id @default(cuid())
+  name        String          // Nombre descriptivo: "Comuniones Colegio San Juan 2026"
+  category    EventCategory   // Dominio: SACRAMENTAL, ESCOLAR, ESTUDIO
+  subtype     EventSubtype    // Subcategoría específica (HU-B4)
+  date        DateTime        // Fecha programada del evento
+  location    String?         // Lugar opcional (iglesia, colegio, estudio)
+  notes       String?         // Observaciones del fotógrafo
+  coverPrice  Float           // Precio base por participante (en COP)
+  status      String          @default("ACTIVO") // ACTIVO, FINALIZADO, CANCELADO
+
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  // Relación 1:N → Un evento tiene muchos participantes
+  participants Participant[]
+
+  // Relación 1:N → Un evento puede tener incidencias asociadas
+  incidents   Incident[]
+
+  @@index([category])
+  @@index([subtype])
+  @@index([date])
+}
+
+// ─── Modelo: Participante ───────────────────────────────────────────
+// Cada persona registrada dentro de un evento (alumno, cliente, novios).
+// Contiene datos de contacto, estado de entrega y pagos.
+
+model Participant {
+  id            String            @id @default(cuid())
+  eventId       String            // FK → Evento padre
+  name          String            // Nombre completo
+  cedula        String?           // Número de cédula/identificación (filtrado y reutilización de datos)
+  phone         String?           // Teléfono de contacto
+  email         String?           // Email (opcional)
+  notes         String?           // Notas específicas del participante
+  quantity      Int               @default(1) // Cantidad de fotos/copias a entregar
+  unitPrice     Float?            // Precio unitario (override del evento / valor del paquete base)
+  items         Json?             // Array de ítems del "Detalle de Compra": [{ id, descripcion, cantidad, precio_unitario, subtotal }]
+  totalAmount   Float             @default(0.0) // Suma de subtotales del Detalle de Compra
+  status        ParticipantStatus @default(PENDIENTE)
+  paymentStatus PaymentStatus     @default(SIN_PAGO)
+  paidAmount    Float             @default(0.0) // Monto pagado hasta la fecha
+  deliveredAt   DateTime?         // Fecha de entrega física
+  rating        Int?              // Puntuación del cliente asociado a su cédula: 1=Cuidado, 2=Regular, 3=Buena
+  barcode       String?           @unique // Código único para rastreo/entrega
+
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  // Relación N:1 → Cada participante pertenece a un evento
+  event         Event             @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  // Relación 1:N → Un participante tiene múltiples pagos registrados
+  payments      Payment[]
+
+  @@index([eventId])
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([cedula])
+  @@index([barcode])
+}
+
+// ─── Modelo: Pago ───────────────────────────────────────────────────
+// Registro individual de cada transacción de pago.
+// Permite llevar un ledger completo de cuándo, cuánto y cómo pagó cada participante.
+
+model Payment {
+  id            String   @id @default(cuid())
+  participantId String   // FK → Participante que realizó el pago
+  amount        Float    // Monto de esta transacción (en COP)
+  method        String?  // Método de pago: efectivo, transferencia, Nequi, Daviplata, etc.
+  notes         String?  // Notas: "Primer abono", "Pago completo", etc.
+  createdAt     DateTime @default(now())
+
+  // Relación N:1 → Cada pago pertenece a un participante
+  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  @@index([participantId])
+  @@index([createdAt])
+}
+
+// ─── Modelo: Incidencia (Alertas) ────────────────────────────────────
+// Pendiente o anotación operativa (equipo dañado, accesorio por comprar,
+// tarea por completar) que requiere seguimiento. Es editable y resoluble.
+
+enum IncidentStatus {
+  ABIERTA
+  RESUELTA
+}
+
+enum IncidentType {
+  EQUIPO_DANADO
+  ACCESORIO_POR_COMPRAR
+  PENDIENTE
+}
+
+model Incident {
+  id          String          @id @default(cuid())
+  title       String          // Título breve de la incidencia
+  description String?         // Detalle/notas opcional
+  type        IncidentType    @default(PENDIENTE)
+  status      IncidentStatus  @default(ABIERTA)
+  eventId     String?         // FK opcional → Evento relacionado
+  dueDate     DateTime?       // Fecha límite opcional (para acciones)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  event       Event?          @relation(fields: [eventId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([type])
+  @@index([eventId])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CONFIGURACIÓN DE LA APLICACIÓN
+// ═══════════════════════════════════════════════════════════════
+
+model Setting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  category    String   @default("general")
+  label       String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+}
