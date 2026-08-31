@@ -4,6 +4,9 @@
 // BD de prueba (prisma/test-e2e.db) consultada desde Node con PrismaClient.
 const { test, expect, TEST_DB_URL } = require('./fixture');
 const { PrismaClient } = require('@prisma/client');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
 
 async function testDb() {
   const prisma = new PrismaClient({ datasources: { db: { url: TEST_DB_URL } } });
@@ -449,4 +452,97 @@ test('importar participantes desde CSV persiste en la base de datos real (HU-D5)
   expect(count).toBe(2);
   expect(juan).not.toBeNull();
   expect(juan.cedula).toBe('100200300');
+});
+
+// ─── Exportación de documentos (recibo PDF y Excel) ─────────────────────
+// El handler del Main process abre un diálogo nativo; lo falseamos desde
+// app.evaluate para escribir en una ruta temporal y luego validar el archivo.
+
+function stubSaveDialog(app, filePath) {
+  return app.evaluate(({ dialog }, out) => {
+    dialog.showSaveDialog = async () => ({ canceled: false, filePath: out });
+  }, filePath);
+}
+
+function waitForFile(filePath, maxMs = 10000) {
+  const deadline = Date.now() + maxMs;
+  return new Promise((resolve, reject) => {
+    const tick = () => {
+      if (fs.existsSync(filePath)) return resolve();
+      if (Date.now() > deadline) return reject(new Error(`No se generó el archivo ${filePath}`));
+      setTimeout(tick, 100);
+    };
+    tick();
+  });
+}
+
+test('exportar participantes a Excel genera un .xlsx real y válido', async ({ realApp }) => {
+  const { app, page } = realApp;
+  const eventName = 'Exportación Excel';
+  const participantName = 'Pedro Rojas';
+  const outPath = path.join(os.tmpdir(), 'e2e-export.xlsx');
+  if (fs.existsSync(outPath)) fs.unlinkSync(outPath);
+
+  await createEventViaUi(page, eventName);
+  await openEvent(page, eventName);
+  await createParticipant(page, {
+    name: participantName,
+    cedula: '777888999',
+    phone: '3200000000',
+    payment: 'PAGO_PARCIAL',
+    abono: 30000,
+  });
+
+  await stubSaveDialog(app, outPath);
+  await page.getByRole('button', { name: 'Exportar Excel' }).click();
+  await expect(page.getByText('Exportado', { exact: true })).toBeVisible();
+  await waitForFile(outPath);
+
+  const { Workbook } = require('exceljs');
+  const workbook = new Workbook();
+  await workbook.xlsx.readFile(outPath);
+  const ws = workbook.getWorksheet('Participantes');
+  expect(ws).not.toBeNull();
+
+  // Banner de marca (fila 1) + encabezados UPPERCASE (fila 5) + datos (fila 6)
+  expect(String(ws.getCell(1, 1).value)).toContain('FOTOAPP');
+  expect(String(ws.getCell(1, 1).value)).toContain('GESTIÓN FOTOGRÁFICA');
+  expect(String(ws.getCell(5, 1).value)).toBe('NOMBRE');
+  expect(String(ws.getCell(6, 1).value)).toBe(participantName);
+  // Fila de totales con el acumulado de las columnas financieras
+  expect(ws.getCell(7, 1).value).toBe('TOTAL');
+
+  fs.unlinkSync(outPath);
+});
+
+test('generar recibo de pago produce un PDF real y persistente', async ({ realApp }) => {
+  const { app, page } = realApp;
+  const eventName = 'Recibo De Pago';
+  const participantName = 'Laura Torres';
+  const outPath = path.join(os.tmpdir(), 'e2e-recibo.pdf');
+  if (fs.existsSync(outPath)) fs.unlinkSync(outPath);
+
+  await createEventViaUi(page, eventName);
+  await openEvent(page, eventName);
+  await createParticipant(page, {
+    name: participantName,
+    cedula: '888999000',
+    phone: '3010000000',
+    payment: 'PAGO_TOTAL',
+  });
+
+  // Abre el detalle del participante (contiene el historial de pagos con el recibo)
+  await page.getByText(participantName, { exact: true }).first().click();
+  await expect(page.getByRole('button', { name: 'Generar recibo PDF' })).toBeVisible();
+
+  await stubSaveDialog(app, outPath);
+  await page.getByRole('button', { name: 'Generar recibo PDF' }).click();
+  await expect(page.getByText('Recibo generado', { exact: true })).toBeVisible();
+  await waitForFile(outPath);
+
+  const buf = fs.readFileSync(outPath);
+  expect(buf.slice(0, 4).toString('latin1')).toBe('%PDF');
+  expect(buf.length).toBeGreaterThan(2000);
+
+  fs.unlinkSync(outPath);
 });
