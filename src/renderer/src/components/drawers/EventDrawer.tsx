@@ -182,7 +182,7 @@ export function EventDrawer() {
   }
 
   const inputClass = `w-full rounded-lg border px-3 py-2 text-sm ${t.input}`
-  const errorInputClass = `w-full rounded-lg border border-red-500/70 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 ${
+  const errorInputClass = `w-full rounded-lg border border-red-500/70 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 ${
     dark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'
   }`
   const labelClass = 'text-xs font-medium uppercase tracking-wider text-gray-500'
@@ -328,7 +328,7 @@ export function EventDrawer() {
               <button
                 onClick={handleSave}
                 disabled={isPending}
-                className="flex-1 rounded-lg bg-amber-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-amber-500 transition-colors disabled:opacity-50 shadow-lg shadow-amber-600/20"
+                className="flex-1 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-500 transition-colors disabled:opacity-50 shadow-lg shadow-emerald-600/20"
               >
                 {isPending
                   ? 'Guardando...'

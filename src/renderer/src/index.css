@@ -9,14 +9,25 @@
 }
 
 :root {
+  /* Acento de marca — coherente con recibo PDF y exportación Excel */
+  --accent: #22c55e;
+  --accent-strong: #15803d;
+  --accent-soft: rgba(34, 197, 94, 0.12);
+
+  /* Tipografía editorial: serif de carácter para títulos */
+  --font-display: 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua',
+    Palatino, 'Cochin', Georgia, serif;
+  --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto,
+    Oxygen, Ubuntu, Cantarell, sans-serif;
+
   color-scheme: dark;
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto,
-    Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.01em;
   background-color: #121212;
   color: #ffffff;
   overflow-x: hidden;
@@ -26,6 +37,25 @@ body[data-theme='light'] {
   color-scheme: light;
   background-color: #f6f7f9;
   color: #111827;
+}
+
+/* Jerarquía editorial: los títulos usan la serif de carácter */
+h1,
+h2,
+h3,
+h4,
+h5 {
+  font-family: var(--font-display);
+  letter-spacing: -0.015em;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+::selection {
+  background: var(--accent);
+  color: #ffffff;
 }
 
 ::-webkit-scrollbar {
@@ -59,12 +89,12 @@ body[data-theme='light']::-webkit-scrollbar-thumb:hover {
 }
 
 input[type='checkbox'] {
-  accent-color: #f59e0b;
+  accent-color: var(--accent);
 }
 
 input:focus,
 button:focus-visible {
-  outline: 2px solid #f59e0b;
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 

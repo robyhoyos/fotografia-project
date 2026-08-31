@@ -98,7 +98,7 @@ export function ParticipantDrawer({ eventId }: ParticipantDrawerProps) {
     (dark
       ? 'border-gray-700 bg-gray-800 text-white placeholder-gray-600'
       : 'border-gray-300 bg-white text-gray-900 placeholder-gray-400') +
-    ' focus:border-amber-500 focus:ring-amber-500'
+    ' focus:border-emerald-500 focus:ring-emerald-500'
   const inputResize = `${inputBase} resize-none`
   const inputErrorBase =
     'mt-1 w-full rounded-lg border border-red-500/70 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:border-red-500 focus:ring-red-500 ' +
@@ -663,8 +663,8 @@ export function ParticipantDrawer({ eventId }: ParticipantDrawerProps) {
                       formErrors.name
                         ? 'border-red-500/70 focus:border-red-500 focus:ring-red-500'
                         : dark
-                        ? 'border-gray-700 focus:border-amber-500 focus:ring-amber-500'
-                        : 'border-gray-300 focus:border-amber-500 focus:ring-amber-500'
+                        ? 'border-gray-700 focus:border-emerald-500 focus:ring-emerald-500'
+                        : 'border-gray-300 focus:border-emerald-500 focus:ring-emerald-500'
                     }`}
                   />
                   {formErrors.name && (
@@ -982,7 +982,7 @@ export function ParticipantDrawer({ eventId }: ParticipantDrawerProps) {
                 <button
                   onClick={handleSave}
                   disabled={updateMutation.isPending || createMutation.isPending}
-                  className="flex-1 rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-500 transition-colors disabled:opacity-50"
+                  className="flex-1 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 transition-colors disabled:opacity-50"
                 >
                   {(updateMutation.isPending || createMutation.isPending) ? 'Guardando...' : 'Guardar'}
                 </button>
@@ -990,7 +990,7 @@ export function ParticipantDrawer({ eventId }: ParticipantDrawerProps) {
             ) : (
               <button
                 onClick={() => setIsEditing(true)}
-                className="w-full rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-500 transition-colors"
+                className="w-full rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 transition-colors"
               >
                 Editar Participante
               </button>

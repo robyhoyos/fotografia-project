@@ -89,10 +89,10 @@ export function StatsDashboard() {
         <>
           {/* ─── KPIs principales ───────────────────────────── */}
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            <KpiCard label="Total Eventos" value={data.totalEvents} icon="📸" color={t.textPrimary} />
-            <KpiCard label="Participantes" value={data.totalParticipants} icon="👥" color={t.infoText} />
-            <KpiCard label="Cobrado" value={formatCOP(data.collected)} icon="✓" color={t.okText} />
-            <KpiCard label="Por Cobrar" value={formatCOP(data.outstanding)} icon="⏳" color={t.accent} />
+            <KpiCard label="Total Eventos" value={data.totalEvents} icon={CameraIcon} color={t.textPrimary} />
+            <KpiCard label="Participantes" value={data.totalParticipants} icon={PeopleIcon} color={t.infoText} />
+            <KpiCard label="Cobrado" value={formatCOP(data.collected)} icon={CheckIcon} color={t.okText} />
+            <KpiCard label="Por Cobrar" value={formatCOP(data.outstanding)} icon={ClockIcon} color={t.accent} />
           </div>
 
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -245,27 +245,69 @@ export function StatsDashboard() {
 function KpiCard({
   label,
   value,
-  icon,
+  icon: Icon,
   color,
   small,
 }: {
   label: string
   value: string | number
-  icon?: string
+  icon?: React.ComponentType<{ className?: string }>
   color: string
   small?: boolean
 }) {
   const t = useThemeTokens()
+  const theme = useUIStore((s) => s.theme)
+  const chipBg = theme === 'dark' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-emerald-100 text-emerald-700'
   return (
-    <div className={`rounded-xl border p-4 ${t.border} ${t.cardBg}`}>
+    <div className={`group relative rounded-xl border p-4 overflow-hidden transition-shadow hover:shadow-md ${t.border} ${t.cardBg}`}>
+      <span className="absolute left-0 top-0 h-full w-0.5 bg-emerald-500/0 group-hover:bg-emerald-500/70 transition-colors" aria-hidden="true" />
       <div className="flex items-center justify-between">
-        <p className={`text-xs font-medium uppercase tracking-wider ${t.textMuted}`}>
+        <p className={`text-xs font-semibold uppercase tracking-wider ${t.textMuted}`}>
           {label}
         </p>
-        {icon && <span className="text-lg leading-none">{icon}</span>}
+        {Icon && (
+          <span className={`flex h-7 w-7 items-center justify-center rounded-full ${chipBg}`}>
+            <Icon className="h-3.5 w-3.5" />
+          </span>
+        )}
       </div>
-      <p className={`mt-2 font-bold ${small ? 'text-2xl' : 'text-3xl'} ${color}`}>{value}</p>
+      <p className={`mt-2 font-bold font-display ${small ? 'text-2xl' : 'text-3xl'} tracking-tight ${color}`}>{value}</p>
     </div>
+  )
+}
+
+// ─── Glifos de KPI (SVG) ────────────────────────────────────────────
+
+function CameraIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+  )
+}
+
+function PeopleIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+    </svg>
+  )
+}
+
+function CheckIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  )
+}
+
+function ClockIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
   )
 }
 
@@ -326,7 +368,7 @@ function ReceivablesPanel() {
         </div>
         <button
           onClick={() => refetch()}
-          className="text-xs text-gray-400 hover:text-amber-400 transition-colors"
+          className="text-xs text-gray-400 hover:text-emerald-400 transition-colors"
         >
           Refrescar
         </button>

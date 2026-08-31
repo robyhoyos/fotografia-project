@@ -109,7 +109,7 @@ export function BarcodeScanner({ eventId, onClose }: BarcodeScannerProps) {
 
       {isLoading && barcode.length >= 5 && (
         <div className={`mt-3 flex items-center gap-2 text-xs ${t.textMuted}`}>
-          <div className="animate-spin h-4 w-4 rounded-full border-b-2 border-amber-500" />
+          <div className="animate-spin h-4 w-4 rounded-full border-b-2 border-emerald-500" />
           Buscando...
         </div>
       )}

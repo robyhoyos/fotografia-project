@@ -173,8 +173,8 @@ export function SettingsPage() {
 
   const inputClass = `w-full rounded-lg border px-3 py-2 text-sm transition-colors ${
     theme === 'dark'
-      ? 'border-gray-700 bg-gray-800 text-white placeholder-gray-500 focus:border-amber-500 focus:outline-none'
-      : 'border-gray-300 bg-white text-gray-900 placeholder-gray-400 focus:border-amber-500 focus:outline-none'
+      ? 'border-gray-700 bg-gray-800 text-white placeholder-gray-500 focus:border-emerald-500 focus:outline-none'
+      : 'border-gray-300 bg-white text-gray-900 placeholder-gray-400 focus:border-emerald-500 focus:outline-none'
   }`
 
   const labelClass = `block text-sm font-medium mb-1 ${
@@ -321,7 +321,7 @@ export function SettingsPage() {
           <button
             onClick={handleSave}
             disabled={!hasChanges || updateMutation.isPending}
-            className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {updateMutation.isPending ? 'Guardando...' : 'Guardar cambios'}
           </button>
@@ -358,8 +358,8 @@ export function SettingsPage() {
                       onClick={() => setShowResetConfirm(category)}
                       className={`text-xs transition-colors ${
                         theme === 'dark'
-                          ? 'text-gray-500 hover:text-amber-400'
-                          : 'text-gray-400 hover:text-amber-600'
+                          ? 'text-gray-500 hover:text-emerald-400'
+                          : 'text-gray-400 hover:text-emerald-600'
                       }`}
                     >
                       Restaurar valores por defecto
@@ -389,8 +389,8 @@ export function SettingsPage() {
               onClick={() => setShowResetConfirm('all')}
               className={`text-xs underline decoration-dotted underline-offset-4 transition-colors ${
                 theme === 'dark'
-                  ? 'text-gray-500 hover:text-amber-400'
-                  : 'text-gray-400 hover:text-amber-600'
+                  ? 'text-gray-500 hover:text-emerald-400'
+                  : 'text-gray-400 hover:text-emerald-600'
               }`}
             >
               Restaurar todos los valores por defecto
@@ -475,8 +475,8 @@ function DatabaseInfoCard({ theme }: { theme: 'dark' | 'light' }) {
           onClick={load}
           className={`text-xs transition-colors ${
             theme === 'dark'
-              ? 'text-gray-500 hover:text-amber-400'
-              : 'text-gray-400 hover:text-amber-600'
+              ? 'text-gray-500 hover:text-emerald-400'
+              : 'text-gray-400 hover:text-emerald-600'
           }`}
         >
           Refrescar estado

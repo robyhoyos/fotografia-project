@@ -102,7 +102,7 @@ export function ParticipantTable({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500" />
       </div>
     )
   }
@@ -161,8 +161,8 @@ export function ParticipantTable({
                   className={`group cursor-pointer transition-colors ${
                     isSelected
                       ? theme === 'dark'
-                        ? 'bg-amber-500/5 border-l-2 border-l-amber-500'
-                        : 'bg-amber-50 border-l-2 border-l-amber-500'
+                        ? 'bg-emerald-500/5 border-l-2 border-l-emerald-500'
+                        : 'bg-emerald-50 border-l-2 border-l-emerald-500'
                       : `${t.rowHover} border-l-2 border-l-transparent`
                   }`}
                   onClick={() =>
@@ -271,7 +271,7 @@ export function ParticipantTable({
             </p>
             <button
               onClick={() => openDrawer('participant-create', { eventId })}
-              className="mt-4 rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-500 transition-colors"
+              className="mt-4 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 transition-colors"
             >
               + Nuevo Participante
             </button>
@@ -303,7 +303,7 @@ export function ParticipantTable({
 
             <button
               onClick={handleBulkPending}
-              className="flex items-center gap-2 rounded-lg bg-amber-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-500 transition-colors"
+              className="flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-500 transition-colors"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />

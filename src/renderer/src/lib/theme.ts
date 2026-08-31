@@ -96,8 +96,8 @@ const DARK: ThemeTokens = {
   tableHeadText: 'text-gray-400',
 
   input:
-    'border-gray-800 bg-gray-900/50 text-white placeholder-gray-500 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500',
-  checkbox: 'border-gray-600 bg-gray-800 text-amber-500 focus:ring-amber-500 focus:ring-offset-0',
+    'border-gray-800 bg-gray-900/50 text-white placeholder-gray-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500',
+  checkbox: 'border-gray-600 bg-gray-800 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0',
 
   btnGhost: 'border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white',
   iconBtn: 'text-gray-400 hover:bg-gray-700 hover:text-white',
@@ -147,8 +147,8 @@ const LIGHT: ThemeTokens = {
   tableHeadText: 'text-gray-200',
 
   input:
-    'border-gray-300 bg-white text-gray-900 placeholder-gray-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500',
-  checkbox: 'border-gray-400 bg-white text-amber-500 focus:ring-amber-500 focus:ring-offset-0',
+    'border-gray-300 bg-white text-gray-900 placeholder-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500',
+  checkbox: 'border-gray-400 bg-white text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0',
 
   btnGhost: 'border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:text-gray-900',
   iconBtn: 'text-gray-500 hover:bg-gray-200 hover:text-gray-900',

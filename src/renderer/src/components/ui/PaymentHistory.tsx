@@ -64,7 +64,7 @@ export function PaymentHistory({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-amber-500" />
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-500" />
       </div>
     )
   }
@@ -296,7 +296,7 @@ export function PaymentHistory({
               (paymentType === 'ABONO' && (!amount || amount <= 0)) ||
               (paymentType === 'PAGO_TOTAL' && summary.outstanding <= 0)
             }
-            className="w-full rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-500 transition-colors disabled:opacity-50"
+            className="w-full rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 transition-colors disabled:opacity-50"
           >
             {createPayment.isPending ? 'Registrando...' : 'Registrar pago'}
           </button>

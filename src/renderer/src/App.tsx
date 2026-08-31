@@ -118,7 +118,7 @@ export function App() {
                 </p>
                 <button
                   onClick={() => navigateTo('events')}
-                  className="mt-4 rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-500 transition-colors"
+                  className="mt-4 rounded-lg border-l-4 border-emerald-800 bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 transition-colors"
                 >
                   Ir a Eventos
                 </button>

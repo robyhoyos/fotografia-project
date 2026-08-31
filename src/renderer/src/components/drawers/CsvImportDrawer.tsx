@@ -194,7 +194,7 @@ export function CsvImportDrawer() {
             {step === 'upload' && (
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed py-16 hover:border-amber-500/50 transition-colors cursor-pointer ${
+                className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed py-16 hover:border-emerald-500/50 transition-colors cursor-pointer ${
                   theme === 'dark' ? 'border-gray-700' : 'border-gray-300'
                 }`}
               >
@@ -323,7 +323,7 @@ export function CsvImportDrawer() {
                 <button
                   onClick={handleImport}
                   disabled={validCount === 0 || importMutation.isPending}
-                  className="flex-1 rounded-lg bg-amber-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-amber-500 transition-colors disabled:opacity-50 shadow-lg shadow-amber-600/20"
+                  className="flex-1 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-500 transition-colors disabled:opacity-50 shadow-lg shadow-emerald-600/20"
                 >
                   {importMutation.isPending
                     ? 'Importando...'

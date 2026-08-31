@@ -145,7 +145,7 @@ export function AlertsPage() {
         </div>
         <button
           onClick={startCreate}
-          className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-500 transition-colors"
+          className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 transition-colors"
         >
           + Nueva incidencia
         </button>
@@ -153,7 +153,7 @@ export function AlertsPage() {
 
       {isLoading ? (
         <div className="flex items-center justify-center py-16">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500" />
         </div>
       ) : (
         <>
@@ -318,7 +318,7 @@ export function AlertsPage() {
                   <button
                     onClick={handleSave}
                     disabled={createIncident.isPending || updateIncident.isPending}
-                    className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-500 transition-colors disabled:opacity-50"
+                    className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 transition-colors disabled:opacity-50"
                   >
                     {createIncident.isPending || updateIncident.isPending
                       ? 'Guardando...'
@@ -345,7 +345,7 @@ export function AlertsPage() {
               </div>
               <button
                 onClick={() => refetch()}
-                className="text-xs text-gray-400 hover:text-amber-400 transition-colors"
+                className="text-xs text-gray-400 hover:text-emerald-400 transition-colors"
               >
                 Refrescar
               </button>
