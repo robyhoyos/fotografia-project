@@ -15,6 +15,7 @@ import { EventDrawer } from './components/drawers/EventDrawer'
 import { CsvImportDrawer } from './components/drawers/CsvImportDrawer'
 import { SettingsPage } from './pages/SettingsPage'
 import { AlertsPage } from './pages/AlertsPage'
+import { ClientsPage } from './pages/ClientsPage'
 
 export function App() {
   const {
@@ -138,6 +139,8 @@ export function App() {
             <AlertsPage />
           </div>
         )}
+
+        {activeView === 'clients' && <ClientsPage />}
 
         {activeView === 'settings' && <SettingsPage />}
       </main>

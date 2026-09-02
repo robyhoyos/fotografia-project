@@ -195,6 +195,25 @@ const api = {
       ),
   },
 
+  // ─── Clientes (vista agregada por cédula) ─────────────────
+
+  customers: {
+    /**
+     * @description Lista clientes únicos (por cédula) con toda su información
+     * @returns ApiResponse<CustomerSummary[]>
+     */
+    list: () =>
+      ipcRenderer.invoke(IPC_CHANNELS.CUSTOMERS.LIST),
+
+    /**
+     * @description Asigna la calificación de un cliente (única por cédula)
+     * @param payload - { cedula: string, rating: number | null }
+     * @returns ApiResponse<{ updated: number }>
+     */
+    setRating: (payload: { cedula: string; rating: number | null }) =>
+      ipcRenderer.invoke(IPC_CHANNELS.CUSTOMERS.SET_RATING, payload),
+  },
+
   // ─── Base de Datos ────────────────────────────────────────
 
   database: {

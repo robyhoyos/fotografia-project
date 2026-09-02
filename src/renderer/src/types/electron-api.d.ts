@@ -3,7 +3,7 @@
 // El preload expone esta API vía contextBridge; este archivo la define
 // para que TypeScript conozca su forma sin importar electron.
 
-import type { ApiResponse, EventWithParticipants, EventStats, DashboardStats, AlertsSummary, ReceivableItem, Incident } from '../../../../shared/types/ipc'
+import type { ApiResponse, EventWithParticipants, EventStats, DashboardStats, AlertsSummary, ReceivableItem, Incident, CustomerSummary } from '../../../../shared/types/ipc'
 
 declare global {
   interface Window {
@@ -27,6 +27,10 @@ declare global {
         bulkUpdatePayment: (payload: any) => Promise<ApiResponse<any>>
         bulkDelete: (payload: any) => Promise<ApiResponse<any>>
         importCsv: (payload: any) => Promise<ApiResponse<any>>
+      }
+      customers: {
+        list: () => Promise<ApiResponse<CustomerSummary[]>>
+        setRating: (payload: { cedula: string; rating: number | null }) => Promise<ApiResponse<{ updated: number }>>
       }
       database: {
         backup: () => Promise<ApiResponse<any>>

@@ -6,7 +6,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { ParticipantSummary, EventWithParticipants } from '../../../../shared/types/ipc'
 
-export type AppView = 'events' | 'scanner' | 'dashboard' | 'alerts' | 'settings'
+export type AppView = 'events' | 'scanner' | 'dashboard' | 'alerts' | 'clients' | 'settings'
 
 interface UIState {
   theme: 'dark' | 'light'

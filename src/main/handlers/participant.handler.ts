@@ -34,6 +34,30 @@ export function registerParticipantHandlers(
   const channels = IPC_CHANNELS.PARTICIPANTS
   const customerChannels = IPC_CHANNELS.CUSTOMERS
 
+  // ─── CUSTOMERS.LIST: Vista agregada de clientes ─────────────
+
+  /**
+   * Canal: customers:list
+   * Payload: none
+   * Response: ApiResponse<CustomerSummary[]>
+   * Lista clientes únicos por cédula con toda su información de contacto
+   * (nombre, cédula, teléfono, email) y métricas de trabajo con la agencia.
+   */
+  ipcMain.handle(
+    customerChannels.LIST,
+    async (): Promise<ApiResponse<any>> => {
+      try {
+        const data = await participantService.listCustomers()
+        return { success: true, data }
+      } catch (err) {
+        return {
+          success: false,
+          error: (err as Error).message,
+        }
+      }
+    }
+  )
+
   // ─── GET_BY_EVENT: Listar participantes de un evento ─────────
 
   /**
