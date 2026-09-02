@@ -5,6 +5,7 @@
 import { ipcMain, BrowserWindow } from 'electron'
 import { IPC_CHANNELS } from '../../../shared/types/ipc'
 import { generateReceiptPDF } from '../services/pdf.service'
+import { requireAdmin } from '../auth/permissions'
 
 const channels = IPC_CHANNELS.PDF
 
@@ -14,7 +15,7 @@ const channels = IPC_CHANNELS.PDF
  */
 export function registerPdfHandlers() {
   // ─── Generar recibo de pago ────────────────────────────────
-  ipcMain.handle(channels.GENERATE_RECEIPT, async (event, payload) => {
+  ipcMain.handle(channels.GENERATE_RECEIPT, requireAdmin(async (event, payload) => {
     try {
       const win = BrowserWindow.fromWebContents(event.sender)
       if (!win) {
@@ -34,5 +35,5 @@ export function registerPdfHandlers() {
       }
       return { success: false, error: (err as Error).message }
     }
-  })
+  }))
 }

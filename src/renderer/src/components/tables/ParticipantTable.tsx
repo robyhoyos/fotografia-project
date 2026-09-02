@@ -15,6 +15,7 @@ interface ParticipantTableProps {
   onDelete: (participantId: string) => void
   onBulkStatusChange: (ids: string[], status: string, onSuccess?: () => void) => void
   onBulkDelete: (ids: string[], onSuccess?: () => void) => void
+  readOnly?: boolean
 }
 
 export function ParticipantTable({
@@ -25,6 +26,7 @@ export function ParticipantTable({
   onDelete,
   onBulkStatusChange,
   onBulkDelete,
+  readOnly = false,
 }: ParticipantTableProps) {
   const {
     theme,
@@ -113,17 +115,19 @@ export function ParticipantTable({
         <table className="w-full">
           <thead>
             <tr className={`border-b ${t.border} ${t.tableHeadBg}`}>
-              <th className="w-12 px-4 py-4">
-                <input
-                  type="checkbox"
-                  checked={isAllSelected}
-                  ref={(el) => {
-                    if (el) el.indeterminate = isPartialSelection
-                  }}
-                  onChange={handleSelectAll}
-                  className={`h-4 w-4 rounded ${t.checkbox}`}
-                />
-              </th>
+              {!readOnly && (
+                <th className="w-12 px-4 py-4">
+                  <input
+                    type="checkbox"
+                    checked={isAllSelected}
+                    ref={(el) => {
+                      if (el) el.indeterminate = isPartialSelection
+                    }}
+                    onChange={handleSelectAll}
+                    className={`h-4 w-4 rounded ${t.checkbox}`}
+                  />
+                </th>
+              )}
               <th className={`px-4 py-4 text-left text-xs font-medium uppercase tracking-wider ${t.tableHeadText}`}>
                 Nombre
               </th>
@@ -145,9 +149,11 @@ export function ParticipantTable({
               <th className={`px-4 py-4 text-left text-xs font-medium uppercase tracking-wider ${t.tableHeadText}`}>
                 Pagado
               </th>
-              <th className={`px-4 py-4 text-right text-xs font-medium uppercase tracking-wider ${t.tableHeadText}`}>
-                Acciones
-              </th>
+              {!readOnly && (
+                <th className={`px-4 py-4 text-right text-xs font-medium uppercase tracking-wider ${t.tableHeadText}`}>
+                  Acciones
+                </th>
+              )}
             </tr>
           </thead>
 
@@ -169,17 +175,19 @@ export function ParticipantTable({
                     openDrawer('participant-detail', participant)
                   }
                 >
-                  <td className="w-12 px-4 py-3">
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() =>
-                        toggleParticipantSelection(participant.id)
-                      }
-                      onClick={(e) => e.stopPropagation()}
-                      className={`h-4 w-4 rounded ${t.checkbox}`}
-                    />
-                  </td>
+                  {!readOnly && (
+                    <td className="w-12 px-4 py-3">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() =>
+                          toggleParticipantSelection(participant.id)
+                        }
+                        onClick={(e) => e.stopPropagation()}
+                        className={`h-4 w-4 rounded ${t.checkbox}`}
+                      />
+                    </td>
+                  )}
 
                   <td className="px-4 py-3">
                     <div>
@@ -226,34 +234,36 @@ export function ParticipantTable({
                     {formatCOP(participant.paidAmount)}
                   </td>
 
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          onEdit(participant)
-                        }}
-                        className={`rounded-lg p-1.5 transition-colors ${t.iconBtn}`}
-                        title="Editar"
-                      >
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          onDelete(participant.id)
-                        }}
-                        className={`rounded-lg p-1.5 transition-colors ${t.iconBtn} ${t.iconBtnDanger}`}
-                        title="Eliminar"
-                      >
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
-                  </td>
+                  {!readOnly && (
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onEdit(participant)
+                          }}
+                          className={`rounded-lg p-1.5 transition-colors ${t.iconBtn}`}
+                          title="Editar"
+                        >
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onDelete(participant.id)
+                          }}
+                          className={`rounded-lg p-1.5 transition-colors ${t.iconBtn} ${t.iconBtnDanger}`}
+                          title="Eliminar"
+                        >
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               )
             })}
@@ -267,19 +277,23 @@ export function ParticipantTable({
             </svg>
             <p className="text-sm font-medium">No hay participantes</p>
             <p className={`text-xs mt-1 ${t.textFaint}`}>
-              Registra participantes o importa desde un archivo CSV
+              {readOnly
+                ? 'Este evento no tiene participantes registrados'
+                : 'Registra participantes o importa desde un archivo CSV'}
             </p>
-            <button
-              onClick={() => openDrawer('participant-create', { eventId })}
-              className="mt-4 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 transition-colors"
-            >
-              + Nuevo Participante
-            </button>
+            {!readOnly && (
+              <button
+                onClick={() => openDrawer('participant-create', { eventId })}
+                className="mt-4 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 transition-colors"
+              >
+                + Nuevo Participante
+              </button>
+            )}
           </div>
         )}
       </div>
 
-      {selectedParticipantIds.length > 0 && (
+      {!readOnly && selectedParticipantIds.length > 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
           <div className={`flex items-center gap-3 rounded-xl border px-6 py-3 shadow-2xl backdrop-blur-sm ${t.floatingBar}`}>
             <span className={`text-sm font-medium ${t.textSecondary}`}>

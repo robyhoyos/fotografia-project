@@ -4,6 +4,7 @@
 
 import React, { useState } from 'react'
 import { useUIStore } from '../../stores/ui.store'
+import { useAuthStore } from '../../stores/auth.store'
 import { useToast } from '../../hooks/useToast'
 import { useSettingValue } from '../../hooks/useSettings'
 import { useThemeTokens } from '../../lib/theme'
@@ -15,6 +16,9 @@ interface SidebarProps {
   activeView: View
   onNavigate: (view: View) => void
 }
+
+// Vistas solo visibles para administradores (acceso total).
+const ADMIN_ONLY_VIEWS: View[] = ['clients', 'settings']
 
 const NAV_ITEMS: { id: View; label: string; icon: React.ReactNode }[] = [
   {
@@ -81,6 +85,10 @@ export function Sidebar({ activeView, onNavigate }: SidebarProps) {
   const [dbLoading, setDbLoading] = useState(false)
   const [showRestoreConfirm, setShowRestoreConfirm] = useState(false)
 
+  const isAdmin = useAuthStore((s) => s.isAdmin)
+  const user = useAuthStore((s) => s.user)
+  const logout = useAuthStore((s) => s.logout)
+
   const businessName = useSettingValue('business_name', 'FotoApp')
   const businessTagline = useSettingValue('business_tagline', 'Gestión Fotográfica')
 
@@ -88,6 +96,16 @@ export function Sidebar({ activeView, onNavigate }: SidebarProps) {
 
   const bgClass = t.sidebarBg
   const borderClass = 'border-r border-gray-800/50'
+
+  // Filtra las vistas prohibidas para el rol ayudante
+  const visibleNavItems = NAV_ITEMS.filter(
+    (item) => !isAdmin ? !ADMIN_ONLY_VIEWS.includes(item.id) : true
+  )
+
+  const handleLogout = async () => {
+    await logout()
+    success('Sesión cerrada', 'Vuelve pronto')
+  }
 
   const handleBackup = async () => {
     setDbLoading(true)
@@ -151,7 +169,7 @@ export function Sidebar({ activeView, onNavigate }: SidebarProps) {
       </div>
 
       <nav className="flex-1 px-3 space-y-1">
-        {NAV_ITEMS.map((item) => {
+        {visibleNavItems.map((item) => {
           const isActive = activeView === item.id
           return (
             <button
@@ -170,27 +188,55 @@ export function Sidebar({ activeView, onNavigate }: SidebarProps) {
         })}
       </nav>
 
-      <div className="border-t border-gray-800/50 px-3 py-3 space-y-1">
-        <button
-          onClick={handleBackup}
-          disabled={dbLoading}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-xs font-medium text-gray-400 hover:bg-gray-800/50 hover:text-white transition-colors disabled:opacity-50"
-        >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-          </svg>
-          {dbLoading ? 'Procesando...' : 'Crear respaldo'}
-        </button>
-        <button
-          onClick={() => setShowRestoreConfirm(true)}
-          disabled={dbLoading}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-xs font-medium text-gray-400 hover:bg-gray-800/50 hover:text-white transition-colors disabled:opacity-50"
-        >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12" />
-          </svg>
-          {dbLoading ? 'Procesando...' : 'Restaurar respaldo'}
-        </button>
+      {isAdmin && (
+        <div className="border-t border-gray-800/50 px-3 py-3 space-y-1">
+          <button
+            onClick={handleBackup}
+            disabled={dbLoading}
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-xs font-medium text-gray-400 hover:bg-gray-800/50 hover:text-white transition-colors disabled:opacity-50"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+            </svg>
+            {dbLoading ? 'Procesando...' : 'Crear respaldo'}
+          </button>
+          <button
+            onClick={() => setShowRestoreConfirm(true)}
+            disabled={dbLoading}
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-xs font-medium text-gray-400 hover:bg-gray-800/50 hover:text-white transition-colors disabled:opacity-50"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12" />
+            </svg>
+            {dbLoading ? 'Procesando...' : 'Restaurar respaldo'}
+          </button>
+        </div>
+      )}
+
+      {/* Usuario de la sesión + cerrar sesión */}
+      <div className="border-t border-gray-800/50 px-3 py-3">
+        <div className="flex items-center gap-2.5 rounded-lg px-2 py-1.5">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 font-display text-sm font-bold text-emerald-400">
+            {(user?.displayName || user?.username || '?').charAt(0).toUpperCase()}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-xs font-semibold text-gray-200">
+              {user?.displayName || user?.username}
+            </p>
+            <p className="text-[10px] uppercase tracking-widest text-gray-500">
+              {isAdmin ? 'Administrador' : 'Ayudante · lectura'}
+            </p>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="rounded-md p-1.5 text-gray-500 transition-colors hover:bg-gray-800/70 hover:text-white"
+            title="Cerrar sesión"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       <div className="border-t border-gray-800/50 px-4 py-4">

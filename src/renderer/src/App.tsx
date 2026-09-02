@@ -4,6 +4,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react'
 import { useUIStore, type AppView } from './stores/ui.store'
+import { useAuthStore } from './stores/auth.store'
 import { useThemeTokens } from './lib/theme'
 import { Toaster } from './components/ui/Toaster'
 import { ConfirmDialog } from './components/ui/ConfirmDialog'
@@ -16,8 +17,40 @@ import { CsvImportDrawer } from './components/drawers/CsvImportDrawer'
 import { SettingsPage } from './pages/SettingsPage'
 import { AlertsPage } from './pages/AlertsPage'
 import { ClientsPage } from './pages/ClientsPage'
+import { LoginPage } from './pages/LoginPage'
+
+function LoadingSplash() {
+  return (
+    <div className="flex h-screen w-full items-center justify-center bg-[#0b0e0d]">
+      <div className="flex flex-col items-center gap-4">
+        <span className="relative flex h-3 w-3">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+          <span className="relative inline-flex h-3 w-3 rounded-full bg-emerald-400" />
+        </span>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-emerald-400">
+          Portfolio Studio
+        </p>
+      </div>
+    </div>
+  )
+}
 
 export function App() {
+  const authStatus = useAuthStore((s) => s.status)
+  const checkSession = useAuthStore((s) => s.checkSession)
+
+  useEffect(() => {
+    checkSession()
+  }, [checkSession])
+
+  if (authStatus === 'loading') return <LoadingSplash />
+  if (authStatus === 'setup') return <LoginPage mode="setup" />
+  if (authStatus !== 'authenticated') return <LoginPage mode="login" />
+  return <AppShell />
+}
+
+function AppShell() {
+  const isAdmin = useAuthStore((s) => s.isAdmin)
   const {
     theme,
     scannerEventId,
@@ -140,9 +173,9 @@ export function App() {
           </div>
         )}
 
-        {activeView === 'clients' && <ClientsPage />}
+        {isAdmin && activeView === 'clients' && <ClientsPage />}
 
-        {activeView === 'settings' && <SettingsPage />}
+        {isAdmin && activeView === 'settings' && <SettingsPage />}
       </main>
 
       <EventDrawer />

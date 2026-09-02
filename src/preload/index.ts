@@ -44,6 +44,82 @@ import { IPC_CHANNELS } from '../../shared/types/ipc'
  * 4. Retorna ApiResponse<T> al Renderer
  */
 const api = {
+  // ─── Autenticación y usuarios ─────────────────────────────
+
+  auth: {
+    /**
+     * @description Crea el administrador inicial (primer arranque, sin usuarios)
+     * @param payload - { username, password, displayName? }
+     * @returns ApiResponse<AuthUser>
+     */
+    setupAdmin: (payload: any) =>
+      ipcRenderer.invoke(IPC_CHANNELS.AUTH.SETUP_ADMIN, payload),
+
+    /**
+     * @description Indica si ya existe al menos un usuario (primer arranque)
+     * @returns ApiResponse<boolean>
+     */
+    isSetup: () =>
+      ipcRenderer.invoke(IPC_CHANNELS.AUTH.IS_SETUP),
+
+    /**
+     * @description Inicia sesión con credenciales
+     * @param payload - { username, password }
+     * @returns ApiResponse<AuthUser>
+     */
+    login: (payload: any) =>
+      ipcRenderer.invoke(IPC_CHANNELS.AUTH.LOGIN, payload),
+
+    /**
+     * @description Cierra la sesión activa
+     * @returns ApiResponse<null>
+     */
+    logout: () =>
+      ipcRenderer.invoke(IPC_CHANNELS.AUTH.LOGOUT),
+
+    /**
+     * @description Usuario de la sesión activa (o null)
+     * @returns ApiResponse<AuthUser | null>
+     */
+    getCurrent: () =>
+      ipcRenderer.invoke(IPC_CHANNELS.AUTH.GET_CURRENT),
+
+    /**
+     * @description Cambia la contraseña del usuario autenticado
+     * @param currentPassword - contraseña actual
+     * @param newPassword - nueva contraseña
+     * @returns ApiResponse<null>
+     */
+    changePassword: (currentPassword: string, newPassword: string) =>
+      ipcRenderer.invoke(
+        IPC_CHANNELS.AUTH.CHANGE_PASSWORD,
+        { currentPassword, newPassword }
+      ),
+
+    /**
+     * @description Crea un nuevo usuario (solo ADMIN)
+     * @param payload - { username, password, role, displayName? }
+     * @returns ApiResponse<AuthUser>
+     */
+    createUser: (payload: any) =>
+      ipcRenderer.invoke(IPC_CHANNELS.AUTH.CREATE_USER, payload),
+
+    /**
+     * @description Lista todos los usuarios (solo ADMIN)
+     * @returns ApiResponse<UserRecord[]>
+     */
+    listUsers: () =>
+      ipcRenderer.invoke(IPC_CHANNELS.AUTH.LIST_USERS),
+
+    /**
+     * @description Activa/desactiva un usuario (solo ADMIN)
+     * @param payload - { userId, isActive }
+     * @returns ApiResponse<null>
+     */
+    toggleUser: (payload: any) =>
+      ipcRenderer.invoke(IPC_CHANNELS.AUTH.TOGGLE_USER, payload),
+  },
+
   // ─── Eventos ────────────────────────────────────────────────
 
   events: {

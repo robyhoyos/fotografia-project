@@ -3,11 +3,22 @@
 // El preload expone esta API vía contextBridge; este archivo la define
 // para que TypeScript conozca su forma sin importar electron.
 
-import type { ApiResponse, EventWithParticipants, EventStats, DashboardStats, AlertsSummary, ReceivableItem, Incident, CustomerSummary } from '../../../../shared/types/ipc'
+import type { ApiResponse, EventWithParticipants, EventStats, DashboardStats, AlertsSummary, ReceivableItem, Incident, CustomerSummary, AuthUser, UserRecord } from '../../../../shared/types/ipc'
 
 declare global {
   interface Window {
     api: {
+      auth: {
+        setupAdmin: (payload: { username: string; password: string; displayName?: string | null }) => Promise<ApiResponse<AuthUser>>
+        isSetup: () => Promise<ApiResponse<boolean>>
+        login: (payload: { username: string; password: string }) => Promise<ApiResponse<AuthUser>>
+        logout: () => Promise<ApiResponse<null>>
+        getCurrent: () => Promise<ApiResponse<AuthUser | null>>
+        changePassword: (currentPassword: string, newPassword: string) => Promise<ApiResponse<null>>
+        createUser: (payload: { username: string; password: string; role: 'ADMIN' | 'AYUDANTE'; displayName?: string | null }) => Promise<ApiResponse<AuthUser>>
+        listUsers: () => Promise<ApiResponse<UserRecord[]>>
+        toggleUser: (payload: { userId: string; isActive: boolean }) => Promise<ApiResponse<null>>
+      }
       events: {
         getAll: (payload: any) => Promise<ApiResponse<any>>
         getById: (payload: { id: string }) => Promise<ApiResponse<EventWithParticipants | null>>

@@ -54,6 +54,18 @@ const test = base.extend({
     const app = await launchApp();
     const page = await mainWindow(app);
     await page.waitForLoadState('domcontentloaded');
+    // Primer arranque: la BD está limpia, así que la app pide crear el
+    // administrador inicial. Esperamos a que desaparezca el splash de carga
+    // y completamos el setup de una sola vez.
+    const setupHeading = page.getByRole('heading', { name: 'Crea tu administrador' });
+    await setupHeading.waitFor({ timeout: 30000 });
+    if (await setupHeading.isVisible().catch(() => false)) {
+      await page.getByPlaceholder('Ej: Andrés').fill('Admin E2E');
+      await page.getByPlaceholder('nombre de usuario').fill('admin');
+      await page.getByPlaceholder('••••••••').fill('e2e-password');
+      await page.getByPlaceholder('repite la contraseña').fill('e2e-password');
+      await page.getByRole('button', { name: 'Crear cuenta de administrador' }).click();
+    }
     await page.getByRole('heading', { name: 'Gestión de Eventos' }).waitFor({ timeout: 30000 });
     await use({ app, page });
     await app.close();

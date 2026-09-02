@@ -13,6 +13,7 @@ import {
 } from '../../../shared/schemas/event.schema'
 import { IPC_CHANNELS } from '../../../shared/types/ipc'
 import type { ApiResponse, EventStats } from '../../../shared/types/ipc'
+import { requireAdmin } from '../auth/permissions'
 
 /**
  * @function registerEventHandlers
@@ -94,18 +95,20 @@ export function registerEventHandlers(eventService: EventService): void {
    */
   ipcMain.handle(
     channels.CREATE,
-    async (_, payload): Promise<ApiResponse<any>> => {
-      try {
-        const data = CreateEventSchema.parse(payload)
-        const event = await eventService.create(data)
-        return { success: true, data: event, message: 'Evento creado' }
-      } catch (err) {
-        return {
-          success: false,
-          error: (err as Error).message,
+    requireAdmin(
+      async (_, payload): Promise<ApiResponse<any>> => {
+        try {
+          const data = CreateEventSchema.parse(payload)
+          const event = await eventService.create(data)
+          return { success: true, data: event, message: 'Evento creado' }
+        } catch (err) {
+          return {
+            success: false,
+            error: (err as Error).message,
+          }
         }
       }
-    }
+    )
   )
 
   // ─── UPDATE: Actualizar evento ──────────────────────────────
@@ -117,18 +120,20 @@ export function registerEventHandlers(eventService: EventService): void {
    */
   ipcMain.handle(
     channels.UPDATE,
-    async (_, payload): Promise<ApiResponse<any>> => {
-      try {
-        const data = UpdateEventSchema.parse(payload)
-        const event = await eventService.update(data)
-        return { success: true, data: event, message: 'Evento actualizado' }
-      } catch (err) {
-        return {
-          success: false,
-          error: (err as Error).message,
+    requireAdmin(
+      async (_, payload): Promise<ApiResponse<any>> => {
+        try {
+          const data = UpdateEventSchema.parse(payload)
+          const event = await eventService.update(data)
+          return { success: true, data: event, message: 'Evento actualizado' }
+        } catch (err) {
+          return {
+            success: false,
+            error: (err as Error).message,
+          }
         }
       }
-    }
+    )
   )
 
   // ─── DELETE: Eliminar evento ────────────────────────────────
@@ -140,17 +145,19 @@ export function registerEventHandlers(eventService: EventService): void {
    */
   ipcMain.handle(
     channels.DELETE,
-    async (_, payload: { id: string }): Promise<ApiResponse<any>> => {
-      try {
-        await eventService.delete(payload.id)
-        return { success: true, message: 'Evento eliminado' }
-      } catch (err) {
-        return {
-          success: false,
-          error: (err as Error).message,
+    requireAdmin(
+      async (_, payload: { id: string }): Promise<ApiResponse<any>> => {
+        try {
+          await eventService.delete(payload.id)
+          return { success: true, message: 'Evento eliminado' }
+        } catch (err) {
+          return {
+            success: false,
+            error: (err as Error).message,
+          }
         }
       }
-    }
+    )
   )
 
   // ─── GET_STATS: Estadísticas del evento ─────────────────────

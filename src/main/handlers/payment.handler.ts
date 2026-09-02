@@ -6,6 +6,7 @@ import { ipcMain } from 'electron'
 import { z } from 'zod'
 import { IPC_CHANNELS } from '../../../shared/types/ipc'
 import { PaymentService } from '../services/payment.service'
+import { requireAdmin } from '../auth/permissions'
 
 const channels = IPC_CHANNELS.PAYMENTS
 
@@ -37,7 +38,7 @@ const DeletePaymentSchema = z.object({
  */
 export function registerPaymentHandlers(paymentService: PaymentService) {
   // ─── Crear pago ────────────────────────────────────────────
-  ipcMain.handle(channels.CREATE, async (_, payload) => {
+  ipcMain.handle(channels.CREATE, requireAdmin(async (_, payload) => {
     try {
       const data = CreatePaymentSchema.parse(payload)
       const payment = await paymentService.create(data)
@@ -49,7 +50,7 @@ export function registerPaymentHandlers(paymentService: PaymentService) {
     } catch (err) {
       return { success: false, error: (err as Error).message }
     }
-  })
+  }))
 
   // ─── Historial por participante ─────────────────────────────
   ipcMain.handle(channels.FIND_BY_PARTICIPANT, async (_, payload) => {
@@ -63,7 +64,7 @@ export function registerPaymentHandlers(paymentService: PaymentService) {
   })
 
   // ─── Eliminar pago ─────────────────────────────────────────
-  ipcMain.handle(channels.DELETE, async (_, payload) => {
+  ipcMain.handle(channels.DELETE, requireAdmin(async (_, payload) => {
     try {
       const data = DeletePaymentSchema.parse(payload)
       const result = await paymentService.delete(data.id)
@@ -75,5 +76,5 @@ export function registerPaymentHandlers(paymentService: PaymentService) {
     } catch (err) {
       return { success: false, error: (err as Error).message }
     }
-  })
+  }))
 }

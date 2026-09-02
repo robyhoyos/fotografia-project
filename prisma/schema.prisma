@@ -178,6 +178,31 @@ model Incident {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// USUARIOS Y ROLES (Autenticación)
+// ═══════════════════════════════════════════════════════════════
+
+enum UserRole {
+  ADMIN    // Acceso total: gestionar eventos, participantes, clientes, pagos,
+           // exportaciones, backups y configuración.
+  AYUDANTE // Solo lectura: puede ver eventos, participantes, dashboard y alertas,
+           // pero NO puede editar, eliminar, gestionar pagos, clientes, exportar
+           // ni acceder a respaldos/restauración.
+}
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique // Nombre de usuario de acceso
+  passwordHash String   // Hash seguro de la contraseña (bcrypt) — nunca en texto plano
+  role         UserRole @default(ADMIN)
+  displayName  String?  // Nombre legible opcional del usuario
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([role])
+}
+
+// ═══════════════════════════════════════════════════════════════
 // CONFIGURACIÓN DE LA APLICACIÓN
 // ═══════════════════════════════════════════════════════════════
 

@@ -20,6 +20,7 @@ import { ParticipantDrawer } from '../components/drawers/ParticipantDrawer'
 import { PaymentDrawer } from '../components/drawers/PaymentDrawer'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
 import { useToast } from '../hooks/useToast'
+import { useRole } from '../hooks/useRole'
 import { formatCOP } from '../lib/format'
 import type { EventWithParticipants } from '../../../../shared/types/ipc'
 import type { ParticipantSummary } from '../../../../shared/types/ipc'
@@ -36,6 +37,7 @@ export function EventsPage() {
   } = useUIStore()
   const t = useThemeTokens()
   const { success, error: toastError } = useToast()
+  const { readOnly } = useRole()
 
   const [eventSearch, setEventSearch] = useState('')
   const [dateFrom, setDateFrom] = useState('')
@@ -273,7 +275,7 @@ export function EventsPage() {
               )}
             </button>
 
-            {!selectedEventId && (
+            {!selectedEventId && !readOnly && (
               <button
                 onClick={() => openDrawer('event-edit', null)}
                 className="flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-500 transition-colors shadow-lg shadow-emerald-600/20"
@@ -296,36 +298,40 @@ className={`flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-m
                   </svg>
                   Escanear
                 </button>
-                <button
-                  onClick={() => openDrawer('import-csv', { eventId: selectedEventId })}
+                {!readOnly && (
+                  <button
+                    onClick={() => openDrawer('import-csv', { eventId: selectedEventId })}
 className={`flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${t.btnGhost}`}
                   >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                  </svg>
-                  Importar CSV
-                </button>
-                <button
-                  onClick={() => {
-                    if (selectedEventId) {
-                      exportXlsxMutation.mutate(selectedEventId, {
-                        onSuccess: (data) => success('Exportado', `${data?.count} participantes exportados`),
-                        onError: (err) => {
-                          if (err.message !== 'Operación cancelada por el usuario') {
-                            toastError('Error al exportar', err.message)
-                          }
-                        },
-                      })
-                    }
-                  }}
-                  disabled={exportXlsxMutation.isPending}
-                  className={`flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors disabled:opacity-50 ${t.btnGhost}`}
-                >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4 4l-4-4m0 0L8 20m4-4v12" />
-                  </svg>
-                  {exportXlsxMutation.isPending ? 'Exportando...' : 'Exportar Excel'}
-                </button>
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                    Importar CSV
+                  </button>
+                )}
+                {!readOnly && (
+                  <button
+                    onClick={() => {
+                      if (selectedEventId) {
+                        exportXlsxMutation.mutate(selectedEventId, {
+                          onSuccess: (data) => success('Exportado', `${data?.count} participantes exportados`),
+                          onError: (err) => {
+                            if (err.message !== 'Operación cancelada por el usuario') {
+                              toastError('Error al exportar', err.message)
+                            }
+                          },
+                        })
+                      }
+                    }}
+                    disabled={exportXlsxMutation.isPending}
+                    className={`flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors disabled:opacity-50 ${t.btnGhost}`}
+                  >
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4 4l-4-4m0 0L8 20m4-4v12" />
+                    </svg>
+                    {exportXlsxMutation.isPending ? 'Exportando...' : 'Exportar Excel'}
+                  </button>
+                )}
                 <button
                   onClick={() => window.print()}
 className={`flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${t.btnGhost}`}
@@ -335,20 +341,22 @@ className={`flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-m
                   </svg>
                   Imprimir
                 </button>
-                <button
-                  onClick={() =>
-                    openDrawer('participant-create', {
-                      eventId: selectedEventId,
-                      coverPrice: selectedEvent?.coverPrice,
-                    })
-                  }
-                  className="flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-500 transition-colors shadow-lg shadow-emerald-600/20"
-                >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  Nuevo Participante
-                </button>
+                {!readOnly && (
+                  <button
+                    onClick={() =>
+                      openDrawer('participant-create', {
+                        eventId: selectedEventId,
+                        coverPrice: selectedEvent?.coverPrice,
+                      })
+                    }
+                    className="flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-500 transition-colors shadow-lg shadow-emerald-600/20"
+                  >
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Nuevo Participante
+                  </button>
+                )}
               </>
             )}
           </div>
@@ -406,6 +414,7 @@ className={`flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-m
               onEdit={handleEditEvent}
               onDelete={handleDeleteEvent}
               onSelectEvent={handleSelectEvent}
+              readOnly={readOnly}
             />
           </div>
         ) : (
@@ -453,7 +462,7 @@ className={`flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-m
               </div>
             )}
 
-            {selectedEvent && (
+            {selectedEvent && !readOnly && (
               <div className="flex items-center gap-2">
                 <span className={`text-xs font-medium uppercase tracking-wider ${t.textMuted}`}>Estado:</span>
                 {['ACTIVO', 'FINALIZADO', 'CANCELADO'].map((status) => (
@@ -509,6 +518,7 @@ className={`flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-m
               onDelete={handleDeleteParticipant}
               onBulkStatusChange={handleBulkStatusChange}
               onBulkDelete={handleBulkDelete}
+              readOnly={readOnly}
             />
 
             {participantsData && participantsData.totalPages > 1 && (

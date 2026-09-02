@@ -7,6 +7,7 @@ import { useParticipantByBarcode } from '../../hooks/useParticipants'
 import { useUpdateParticipant } from '../../hooks/useParticipants'
 import { useSettingValue } from '../../hooks/useSettings'
 import { useToast } from '../../hooks/useToast'
+import { useRole } from '../../hooks/useRole'
 import { useThemeTokens } from '../../lib/theme'
 import { formatCOP } from '../../lib/format'
 
@@ -17,6 +18,7 @@ interface BarcodeScannerProps {
 
 export function BarcodeScanner({ eventId, onClose }: BarcodeScannerProps) {
   const t = useThemeTokens()
+  const { readOnly } = useRole()
   const [barcode, setBarcode] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
   const { success, error: toastError, info } = useToast()
@@ -100,7 +102,7 @@ export function BarcodeScanner({ eventId, onClose }: BarcodeScannerProps) {
           value={barcode}
           onChange={(e) => setBarcode(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && participant) handleDeliver()
+            if (e.key === 'Enter' && participant && !readOnly) handleDeliver()
           }}
           placeholder="Escanear o escribir código..."
           className={`w-full rounded-lg border py-3 pl-10 pr-4 text-sm ${t.input}`}
@@ -132,7 +134,7 @@ export function BarcodeScanner({ eventId, onClose }: BarcodeScannerProps) {
             </div>
           </div>
 
-          {participant.status !== 'ENTREGADO' ? (
+          {!readOnly && participant.status !== 'ENTREGADO' ? (
             <button
               onClick={handleDeliver}
               disabled={updateMutation.isPending}
@@ -140,11 +142,11 @@ export function BarcodeScanner({ eventId, onClose }: BarcodeScannerProps) {
             >
               {updateMutation.isPending ? 'Procesando...' : 'Marcar como Entregado'}
             </button>
-          ) : (
+          ) : participant.status === 'ENTREGADO' ? (
             <div className={`rounded-lg px-3 py-2 text-center text-xs ${t.successBanner}`}>
               Ya fue entregado el {participant.deliveredAt ? new Date(participant.deliveredAt).toLocaleDateString('es-ES') : ''}
             </div>
-          )}
+          ) : null}
         </div>
       )}
     </div>

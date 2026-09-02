@@ -6,6 +6,7 @@ import React, { useState } from 'react'
 import { useUIStore } from '../stores/ui.store'
 import { useThemeTokens } from '../lib/theme'
 import { useToast } from '../hooks/useToast'
+import { useRole } from '../hooks/useRole'
 import { useAlertsSummary, useCreateIncident, useUpdateIncident, useDeleteIncident } from '../hooks/useAlerts'
 import { useEvents } from '../hooks/useEvents'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
@@ -26,6 +27,7 @@ const TYPE_BADGE: Record<Incident['type'], keyof ThemeTokens> = {
 
 export function AlertsPage() {
   const t = useThemeTokens()
+  const { readOnly } = useRole()
   const theme = useUIStore((s) => s.theme)
   const setActiveView = useUIStore((s) => s.setActiveView)
   const requestEvent = useUIStore((s) => s.requestEvent)
@@ -143,12 +145,14 @@ export function AlertsPage() {
             Eventos próximos e incidencias por resolver
           </p>
         </div>
-        <button
-          onClick={startCreate}
-          className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 transition-colors"
-        >
-          + Nueva incidencia
-        </button>
+        {!readOnly && (
+          <button
+            onClick={startCreate}
+            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 transition-colors"
+          >
+            + Nueva incidencia
+          </button>
+        )}
       </div>
 
       {isLoading ? (
@@ -415,53 +419,55 @@ export function AlertsPage() {
                         </div>
                       </div>
 
-                      <div className="flex shrink-0 items-center gap-1.5">
-                        <button
-                          onClick={() => handleToggleResolve(inc)}
-                          title={inc.status === 'ABIERTA' ? 'Resolver' : 'Reabrir'}
-                          className={`rounded p-1.5 transition-colors ${
-                            inc.status === 'ABIERTA'
-                              ? 'text-gray-400 hover:bg-emerald-500/10 hover:text-emerald-400'
-                              : `text-gray-400 ${
-                                  theme === 'dark'
-                                    ? 'hover:bg-gray-700/50 hover:text-white'
-                                    : 'hover:bg-gray-200 hover:text-gray-800'
-                                }`
-                          }`}
-                        >
-                          {inc.status === 'ABIERTA' ? (
+                      {!readOnly && (
+                        <div className="flex shrink-0 items-center gap-1.5">
+                          <button
+                            onClick={() => handleToggleResolve(inc)}
+                            title={inc.status === 'ABIERTA' ? 'Resolver' : 'Reabrir'}
+                            className={`rounded p-1.5 transition-colors ${
+                              inc.status === 'ABIERTA'
+                                ? 'text-gray-400 hover:bg-emerald-500/10 hover:text-emerald-400'
+                                : `text-gray-400 ${
+                                    theme === 'dark'
+                                      ? 'hover:bg-gray-700/50 hover:text-white'
+                                      : 'hover:bg-gray-200 hover:text-gray-800'
+                                  }`
+                            }`}
+                          >
+                            {inc.status === 'ABIERTA' ? (
+                              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                            ) : (
+                              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                              </svg>
+                            )}
+                          </button>
+                          <button
+                            onClick={() => startEdit(inc)}
+                            title="Editar"
+                            className={`rounded p-1.5 text-gray-400 transition-colors ${
+                              theme === 'dark'
+                                ? 'hover:bg-gray-700/50 hover:text-white'
+                                : 'hover:bg-gray-200 hover:text-gray-800'
+                            }`}
+                          >
                             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                             </svg>
-                          ) : (
+                          </button>
+                          <button
+                            onClick={() => setDeleteTarget(inc)}
+                            title="Eliminar"
+                            className="rounded p-1.5 text-gray-400 hover:bg-red-500/10 hover:text-red-400 transition-colors"
+                          >
                             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
-                          )}
-                        </button>
-                        <button
-                          onClick={() => startEdit(inc)}
-                          title="Editar"
-                          className={`rounded p-1.5 text-gray-400 transition-colors ${
-                            theme === 'dark'
-                              ? 'hover:bg-gray-700/50 hover:text-white'
-                              : 'hover:bg-gray-200 hover:text-gray-800'
-                          }`}
-                        >
-                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={() => setDeleteTarget(inc)}
-                          title="Eliminar"
-                          className="rounded p-1.5 text-gray-400 hover:bg-red-500/10 hover:text-red-400 transition-colors"
-                        >
-                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
-                      </div>
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}

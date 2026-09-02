@@ -27,9 +27,45 @@ import { IncidentRepository } from './repositories/incident.repository'
 import { IncidentService } from './services/incident.service'
 import { registerIncidentHandlers } from './handlers/incident.handler'
 import { registerDialogHandlers } from './handlers/dialog.handler'
+import { UserRepository } from './repositories/user.repository'
+import { AuthService } from './services/auth.service'
+import { registerAuthHandlers } from './handlers/auth.handler'
+import { setAuthService } from './auth/permissions'
 
 // ─── Singleton de ventana ────────────────────────────────────────────
 let mainWindow: BrowserWindow | null = null
+
+/**
+ * @function loadDevRenderer
+ * @description Carga el renderer en desarrollo con reintentos.
+ *
+ * Electron arranca con `npm run dev` EN PARALELO con Vite, por lo que
+ * a menudo hace el `loadURL` antes de que el servidor esté listo en
+ * localhost:5173 (ERR_CONNECTION_REFUSED). Sin reintento, la ventana
+ * queda en blanco. Este helper reintenta hasta que Vite responda.
+ */
+function loadDevRenderer(win: BrowserWindow): void {
+  const DEV_URL = 'http://localhost:5173'
+  const MAX_ATTEMPTS = 40 // ~20s (500ms por intento)
+
+  let attempts = 0
+  const attempt = () => {
+    if (win.isDestroyed() || attempts >= MAX_ATTEMPTS) return
+    attempts += 1
+    win
+      .loadURL(DEV_URL)
+      .then(() => {
+        // Si por algún motivo se perdió 'ready-to-show' en los reintentos,
+        // garantizamos que la ventana quede visible tras la carga.
+        win.show()
+      })
+      .catch(() => {
+        // ERROR_CONNECTION_REFUSED: el servidor aún no está listo.
+        setTimeout(attempt, 500)
+      })
+  }
+  attempt()
+}
 
 /**
  * @function createWindow
@@ -62,7 +98,7 @@ function createWindow(): void {
   // En desarrollo carga localhost, en producción carga el archivo HTML
   // app.isPackaged es true solo cuando la app está empaquetada con electron-builder
   if (!app.isPackaged) {
-    mainWindow.loadURL('http://localhost:5173')
+    loadDevRenderer(mainWindow)
     // Abrir DevTools en ventana separada (no compite con el drawer de la app)
     mainWindow.webContents.openDevTools({ mode: 'detach' })
   } else {
@@ -122,6 +158,10 @@ async function initializeServices(): Promise<void> {
   const participantRepo = new ParticipantRepository(prisma)
   const paymentRepo = new PaymentRepository(prisma)
 
+  // ─── Autenticación: la sesión se comparte con la guardia de permisos ──
+  const authService = new AuthService(new UserRepository())
+  setAuthService(authService)
+
   // ─── Configuración (se inyecta en servicios que dependen de settings) ──
   const settingsRepository = new SettingsRepository()
   const settingsService = new SettingsService(settingsRepository)
@@ -135,6 +175,7 @@ async function initializeServices(): Promise<void> {
   const incidentService = new IncidentService(new IncidentRepository(prisma), prisma)
 
   // Handlers IPC (puente entre Renderer y Services)
+  registerAuthHandlers()
   registerEventHandlers(eventService)
   registerParticipantHandlers(participantService)
   registerDatabaseHandlers()

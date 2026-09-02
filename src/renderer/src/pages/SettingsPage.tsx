@@ -10,6 +10,7 @@ import { useUIStore } from '../stores/ui.store'
 import { useSettings, useUpdateSettings, useResetSettings } from '../hooks/useSettings'
 import { useToast } from '../hooks/useToast'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
+import { UsersSection } from '../components/settings/UsersSection'
 import { CategorySubtypeMap } from '../../../../shared/schemas/event.schema'
 
 // Orden en que se muestran las secciones (las desconocidas van al final)
@@ -379,6 +380,9 @@ export function SettingsPage() {
                   </div>
                 </section>
               ))}
+
+          {/* Usuarios y roles (solo admin) */}
+          <UsersSection />
 
           {/* Estado de la base de datos */}
           <DatabaseInfoCard theme={theme} />

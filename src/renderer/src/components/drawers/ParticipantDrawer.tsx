@@ -14,6 +14,7 @@ import { useThemeTokens } from '../../lib/theme'
 import { useUpdateParticipant, useCreateParticipant } from '../../hooks/useParticipants'
 import { useCreatePayment } from '../../hooks/usePayments'
 import { useToast } from '../../hooks/useToast'
+import { useRole } from '../../hooks/useRole'
 import { usePaymentMethods } from '../../hooks/useSettings'
 import { formatCOP } from '../../lib/format'
 import { isValidColombianPhone } from '../../../../../shared/schemas/participant.schema'
@@ -85,6 +86,7 @@ function itemsTotal(items: CartItem[]): number {
 export function ParticipantDrawer({ eventId }: ParticipantDrawerProps) {
   const { activeDrawer, closeDrawer, openDrawer } = useUIStore()
   const t = useThemeTokens()
+  const { readOnly } = useRole()
   const dark = useUIStore((s) => s.theme) === 'dark'
   const participant = activeDrawer.data as ParticipantSummary | null
 
@@ -597,25 +599,27 @@ export function ParticipantDrawer({ eventId }: ParticipantDrawerProps) {
                 )}
 
                 {/* Acciones rápidas de estado */}
-                <div className="space-y-2">
-                  <label className="text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Cambiar Estado
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {['PENDIENTE', 'EN_PROCESO', 'ENTREGADO', 'CANCELADO'].map(
-                      (status) => (
-                        <button
-                          key={status}
-                          onClick={() => handleStatusChange(status)}
-                          disabled={participant.status === status}
-                          className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${statusBtn(participant.status === status)}`}
-                        >
-                          {status.replace(/_/g, ' ')}
-                        </button>
-                      )
-                    )}
+                {!readOnly && (
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium uppercase tracking-wider text-gray-500">
+                      Cambiar Estado
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {['PENDIENTE', 'EN_PROCESO', 'ENTREGADO', 'CANCELADO'].map(
+                        (status) => (
+                          <button
+                            key={status}
+                            onClick={() => handleStatusChange(status)}
+                            disabled={participant.status === status}
+                            className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${statusBtn(participant.status === status)}`}
+                          >
+                            {status.replace(/_/g, ' ')}
+                          </button>
+                        )
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Historial de pagos */}
                 <div>
@@ -987,6 +991,13 @@ export function ParticipantDrawer({ eventId }: ParticipantDrawerProps) {
                   {(updateMutation.isPending || createMutation.isPending) ? 'Guardando...' : 'Guardar'}
                 </button>
               </div>
+            ) : readOnly ? (
+              <button
+                onClick={closeDrawer}
+                className={`w-full rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${t.btnGhost}`}
+              >
+                Cerrar
+              </button>
             ) : (
               <button
                 onClick={() => setIsEditing(true)}

@@ -131,6 +131,16 @@ const initScript = function () {
   });
 
   window.api = {
+    auth: {
+      getCurrent: async () => ok({ id: 'user-admin', username: 'admin', role: 'ADMIN', displayName: 'Administrador', isActive: true }),
+      isSetup: async () => ok(true),
+      login: async () => ok({ id: 'user-admin', username: 'admin', role: 'ADMIN', displayName: 'Administrador', isActive: true }),
+      logout: async () => ok(),
+      changePassword: async () => ok(),
+      createUser: async (p) => ok({ id: 'user-new', ...p }),
+      listUsers: async () => ok([]),
+      toggleUser: async () => ok(),
+    },
     events: {
       getAll: async (p) => {
         const filtered = events.filter((e) => !p.search || e.name.toLowerCase().includes(p.search.toLowerCase()));

@@ -20,6 +20,7 @@ import { Workbook, type Cell, type Fill, type Border } from 'exceljs'
 import { IPC_CHANNELS } from '../../../shared/types/ipc'
 import prisma from '../database/prisma'
 import type { SettingsService } from '../services/settings.service'
+import { requireAdmin } from '../auth/permissions'
 
 const channels = IPC_CHANNELS.EXPORT
 
@@ -89,7 +90,7 @@ function moneyDisplay(value: number): string {
  */
 export function registerExportHandlers(settingsService: SettingsService) {
   // ─── Exportar participantes a Excel (.xlsx) ──────────────────────
-  ipcMain.handle(channels.XLSX_PARTICIPANTS, async (event, payload: { eventId: string }) => {
+  ipcMain.handle(channels.XLSX_PARTICIPANTS, requireAdmin(async (event, payload: { eventId: string }) => {
     try {
       const win = BrowserWindow.fromWebContents(event.sender)
       if (!win) {
@@ -371,7 +372,7 @@ export function registerExportHandlers(settingsService: SettingsService) {
     } catch (err) {
       return { success: false, error: (err as Error).message }
     }
-  })
+  }))
 }
 
 // ─── Helpers de estilo ──────────────────────────────────────────────

@@ -15,6 +15,19 @@
  * 4. Renderer recibe resultado tipado y actualiza TanStack Query cache
  */
 export const IPC_CHANNELS = {
+  // ─── Autenticación y usuarios ─────────────────────────────
+  AUTH: {
+    SETUP_ADMIN: 'auth:setupAdmin',         // Primer arranque: crear admin inicial
+    IS_SETUP: 'auth:isSetup',               // ¿Existe al menos un usuario?
+    LOGIN: 'auth:login',                    // Iniciar sesión
+    LOGOUT: 'auth:logout',                  // Cerrar sesión
+    GET_CURRENT: 'auth:getCurrent',         // Usuario de la sesión activa
+    CHANGE_PASSWORD: 'auth:changePassword', // Cambiar la propia contraseña
+    CREATE_USER: 'auth:createUser',         // Crear usuario (solo ADMIN)
+    LIST_USERS: 'auth:listUsers',           // Listar usuarios (solo ADMIN)
+    TOGGLE_USER: 'auth:toggleUser',         // Activar/desactivar usuario (solo ADMIN)
+  } as const,
+
   // ─── Eventos ──────────────────────────────────────────────
   EVENTS: {
     GET_ALL: 'events:getAll',
@@ -102,6 +115,7 @@ export const IPC_CHANNELS = {
 } as const
 
 // Tipos derivados para los canales
+export type AuthChannel = typeof IPC_CHANNELS.AUTH
 export type EventChannel = typeof IPC_CHANNELS.EVENTS
 export type ParticipantChannel = typeof IPC_CHANNELS.PARTICIPANTS
 export type CustomerChannel = typeof IPC_CHANNELS.CUSTOMERS
@@ -124,6 +138,35 @@ export interface ApiResponse<T> {
   data?: T
   error?: string
   message?: string
+}
+
+/**
+ * @enum AppRole
+ * @description Roles de usuario de la aplicación.
+ * - ADMIN: acceso total (gestionar, editar, eliminar, respaldos, configuración).
+ * - AYUDANTE: solo lectura (puede ver eventos, participantes, dashboard y alertas).
+ */
+export type AppRole = 'ADMIN' | 'AYUDANTE'
+
+/**
+ * @interface AuthUser
+ * @description Usuario autenticado (seguro de exponer al renderer).
+ * NUNCA incluye el hash de contraseña.
+ */
+export interface AuthUser {
+  id: string
+  username: string
+  role: AppRole
+  displayName: string | null
+}
+
+/**
+ * @interface UserRecord
+ * @description Registro de usuario para administración (solo ADMIN).
+ */
+export interface UserRecord extends AuthUser {
+  isActive: boolean
+  createdAt: string
 }
 
 /**

@@ -9,6 +9,7 @@ import { usePaymentMethods, useSettingValue } from '../../hooks/useSettings'
 import { formatCOP } from '../../lib/format'
 import { useCurrencyInput } from '../../lib/currencyInput'
 import { useToast } from '../../hooks/useToast'
+import { useRole } from '../../hooks/useRole'
 import { ConfirmDialog } from './ConfirmDialog'
 import { useThemeTokens } from '../../lib/theme'
 import { useUIStore } from '../../stores/ui.store'
@@ -42,6 +43,7 @@ export function PaymentHistory({
 }: PaymentHistoryProps) {
   const t = useThemeTokens()
   const theme = useUIStore((s) => s.theme)
+  const { readOnly } = useRole()
   const { data, isLoading } = usePaymentHistory(participantId)
   const createPayment = useCreatePayment()
   const deletePayment = useDeletePayment()
@@ -202,7 +204,7 @@ export function PaymentHistory({
       </div>
 
       {/* ─── Registrar pago (siempre visible) ──────────────── */}
-      {summary.outstanding > 0 && (
+      {!readOnly && summary.outstanding > 0 && (
         <div className={`rounded-lg border p-4 space-y-3 ${t.border} ${t.cardBg}`}>
           <span className={`text-xs font-medium uppercase tracking-wider ${t.textMuted}`}>
             Registrar pago
@@ -350,19 +352,21 @@ export function PaymentHistory({
                   })}
                 </p>
               </div>
-              <button
-                onClick={() => setDeleteTarget(payment.id)}
-                className={`ml-2 rounded p-1 opacity-0 group-hover:opacity-100 transition-all ${t.textFaint} ${
-                  theme === 'dark'
-                    ? 'hover:bg-red-500/10 hover:text-red-400'
-                    : 'hover:bg-red-100 hover:text-red-600'
-                }`}
-                title="Eliminar pago"
-              >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </button>
+              {!readOnly && (
+                <button
+                  onClick={() => setDeleteTarget(payment.id)}
+                  className={`ml-2 rounded p-1 opacity-0 group-hover:opacity-100 transition-all ${t.textFaint} ${
+                    theme === 'dark'
+                      ? 'hover:bg-red-500/10 hover:text-red-400'
+                      : 'hover:bg-red-100 hover:text-red-600'
+                  }`}
+                  title="Eliminar pago"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              )}
             </div>
           ))}
         </div>

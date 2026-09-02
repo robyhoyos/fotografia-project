@@ -16,6 +16,7 @@ import {
 } from '../../../shared/schemas/participant.schema'
 import { IPC_CHANNELS } from '../../../shared/types/ipc'
 import type { ApiResponse } from '../../../shared/types/ipc'
+import { requireAdmin, requireRole } from '../auth/permissions'
 
 /**
  * @function registerParticipantHandlers
@@ -45,17 +46,46 @@ export function registerParticipantHandlers(
    */
   ipcMain.handle(
     customerChannels.LIST,
-    async (): Promise<ApiResponse<any>> => {
-      try {
-        const data = await participantService.listCustomers()
-        return { success: true, data }
-      } catch (err) {
-        return {
-          success: false,
-          error: (err as Error).message,
+    requireAdmin(
+      async (): Promise<ApiResponse<any>> => {
+        try {
+          const data = await participantService.listCustomers()
+          return { success: true, data }
+        } catch (err) {
+          return {
+            success: false,
+            error: (err as Error).message,
+          }
         }
       }
-    }
+    )
+  )
+
+  // ─── CUSTOMERS.SET_RATING: Calificar cliente por cédula ─────
+
+  /**
+   * Canal: customers:setRating
+   * Payload: { cedula: string, rating: number | null }
+   * Response: ApiResponse<{ updated: number }>
+   * Asigna la calificación (1=Cuidado, 2=Regular, 3=Buena) a un cliente único
+   * por cédula. Solo administradores.
+   */
+  ipcMain.handle(
+    customerChannels.SET_RATING,
+    requireAdmin(
+      async (_, payload: { cedula: string; rating: number | null }): Promise<ApiResponse<any>> => {
+        try {
+          const data = SetCustomerRatingSchema.parse(payload)
+          const result = await participantService.setCustomerRating(data.cedula, data.rating)
+          return { success: true, data: result }
+        } catch (err) {
+          return {
+            success: false,
+            error: (err as Error).message,
+          }
+        }
+      }
+    )
   )
 
   // ─── GET_BY_EVENT: Listar participantes de un evento ─────────
@@ -134,22 +164,24 @@ export function registerParticipantHandlers(
    */
   ipcMain.handle(
     channels.CREATE,
-    async (_, payload): Promise<ApiResponse<any>> => {
-      try {
-        const data = CreateParticipantSchema.parse(payload)
-        const participant = await participantService.create(data)
-        return {
-          success: true,
-          data: participant,
-          message: 'Participante registrado',
-        }
-      } catch (err) {
-        return {
-          success: false,
-          error: (err as Error).message,
+    requireAdmin(
+      async (_, payload): Promise<ApiResponse<any>> => {
+        try {
+          const data = CreateParticipantSchema.parse(payload)
+          const participant = await participantService.create(data)
+          return {
+            success: true,
+            data: participant,
+            message: 'Participante registrado',
+          }
+        } catch (err) {
+          return {
+            success: false,
+            error: (err as Error).message,
+          }
         }
       }
-    }
+    )
   )
 
   // ─── UPDATE: Actualizar participante ────────────────────────
@@ -161,22 +193,24 @@ export function registerParticipantHandlers(
    */
   ipcMain.handle(
     channels.UPDATE,
-    async (_, payload): Promise<ApiResponse<any>> => {
-      try {
-        const data = UpdateParticipantSchema.parse(payload)
-        const participant = await participantService.update(data)
-        return {
-          success: true,
-          data: participant,
-          message: 'Participante actualizado',
-        }
-      } catch (err) {
-        return {
-          success: false,
-          error: (err as Error).message,
+    requireAdmin(
+      async (_, payload): Promise<ApiResponse<any>> => {
+        try {
+          const data = UpdateParticipantSchema.parse(payload)
+          const participant = await participantService.update(data)
+          return {
+            success: true,
+            data: participant,
+            message: 'Participante actualizado',
+          }
+        } catch (err) {
+          return {
+            success: false,
+            error: (err as Error).message,
+          }
         }
       }
-    }
+    )
   )
 
   // ─── DELETE: Eliminar participante ──────────────────────────
@@ -188,20 +222,22 @@ export function registerParticipantHandlers(
    */
   ipcMain.handle(
     channels.DELETE,
-    async (_, payload: { id: string }): Promise<ApiResponse<any>> => {
-      try {
-        await participantService.delete(payload.id)
-        return {
-          success: true,
-          message: 'Participante eliminado',
-        }
-      } catch (err) {
-        return {
-          success: false,
-          error: (err as Error).message,
+    requireAdmin(
+      async (_, payload: { id: string }): Promise<ApiResponse<any>> => {
+        try {
+          await participantService.delete(payload.id)
+          return {
+            success: true,
+            message: 'Participante eliminado',
+          }
+        } catch (err) {
+          return {
+            success: false,
+            error: (err as Error).message,
+          }
         }
       }
-    }
+    )
   )
 
   // ─── BULK_UPDATE_STATUS: Cambio masivo de estado (HU-D6) ───
@@ -219,22 +255,24 @@ export function registerParticipantHandlers(
    */
   ipcMain.handle(
     channels.BULK_UPDATE_STATUS,
-    async (_, payload): Promise<ApiResponse<any>> => {
-      try {
-        const data = BulkUpdateStatusSchema.parse(payload)
-        const result = await participantService.bulkUpdateStatus(data)
-        return {
-          success: true,
-          data: result,
-          message: `${result.updated} participantes actualizados`,
-        }
-      } catch (err) {
-        return {
-          success: false,
-          error: (err as Error).message,
+    requireAdmin(
+      async (_, payload): Promise<ApiResponse<any>> => {
+        try {
+          const data = BulkUpdateStatusSchema.parse(payload)
+          const result = await participantService.bulkUpdateStatus(data)
+          return {
+            success: true,
+            data: result,
+            message: `${result.updated} participantes actualizados`,
+          }
+        } catch (err) {
+          return {
+            success: false,
+            error: (err as Error).message,
+          }
         }
       }
-    }
+    )
   )
 
   // ─── BULK_UPDATE_PAYMENT: Pago masivo ──────────────────────
@@ -246,22 +284,24 @@ export function registerParticipantHandlers(
    */
   ipcMain.handle(
     channels.BULK_UPDATE_PAYMENT,
-    async (_, payload): Promise<ApiResponse<any>> => {
-      try {
-        const data = BulkUpdatePaymentSchema.parse(payload)
-        const result = await participantService.bulkUpdatePayment(data)
-        return {
-          success: true,
-          data: result,
-          message: `${result.updated} pagos registrados`,
-        }
-      } catch (err) {
-        return {
-          success: false,
-          error: (err as Error).message,
+    requireAdmin(
+      async (_, payload): Promise<ApiResponse<any>> => {
+        try {
+          const data = BulkUpdatePaymentSchema.parse(payload)
+          const result = await participantService.bulkUpdatePayment(data)
+          return {
+            success: true,
+            data: result,
+            message: `${result.updated} pagos registrados`,
+          }
+        } catch (err) {
+          return {
+            success: false,
+            error: (err as Error).message,
+          }
         }
       }
-    }
+    )
   )
 
   // ─── BULK_DELETE: Eliminación masiva ────────────────────────
@@ -273,22 +313,24 @@ export function registerParticipantHandlers(
    */
   ipcMain.handle(
     channels.BULK_DELETE,
-    async (_, payload): Promise<ApiResponse<any>> => {
-      try {
-        const data = BulkDeleteSchema.parse(payload)
-        const result = await participantService.bulkDelete(data)
-        return {
-          success: true,
-          data: result,
-          message: `${result.deleted} participantes eliminados`,
-        }
-      } catch (err) {
-        return {
-          success: false,
-          error: (err as Error).message,
+    requireAdmin(
+      async (_, payload): Promise<ApiResponse<any>> => {
+        try {
+          const data = BulkDeleteSchema.parse(payload)
+          const result = await participantService.bulkDelete(data)
+          return {
+            success: true,
+            data: result,
+            message: `${result.deleted} participantes eliminados`,
+          }
+        } catch (err) {
+          return {
+            success: false,
+            error: (err as Error).message,
+          }
         }
       }
-    }
+    )
   )
 
   // ─── IMPORT_CSV: Importación masiva (HU-D5) ────────────────
@@ -309,21 +351,23 @@ export function registerParticipantHandlers(
    */
   ipcMain.handle(
     channels.IMPORT_CSV,
-    async (_, payload): Promise<ApiResponse<any>> => {
-      try {
-        const data = ImportCsvSchema.parse(payload)
-        const result = await participantService.importCsv(data)
-        return {
-          success: true,
-          data: result,
-          message: `${result.imported} de ${result.total} registros importados`,
-        }
-      } catch (err) {
-        return {
-          success: false,
-          error: (err as Error).message,
+    requireAdmin(
+      async (_, payload): Promise<ApiResponse<any>> => {
+        try {
+          const data = ImportCsvSchema.parse(payload)
+          const result = await participantService.importCsv(data)
+          return {
+            success: true,
+            data: result,
+            message: `${result.imported} de ${result.total} registros importados`,
+          }
+        } catch (err) {
+          return {
+            success: false,
+            error: (err as Error).message,
+          }
         }
       }
-    }
+    )
   )
 }

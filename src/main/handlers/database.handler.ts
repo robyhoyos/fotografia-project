@@ -12,6 +12,7 @@ import {
   restoreDatabase,
   getDatabaseInfo,
 } from '../services/database.service'
+import { requireAdmin } from '../auth/permissions'
 
 const channels = IPC_CHANNELS.DATABASE
 
@@ -33,7 +34,7 @@ const channels = IPC_CHANNELS.DATABASE
  */
 export function registerDatabaseHandlers() {
   // ─── Backup ───────────────────────────────────────────────
-  ipcMain.handle(channels.BACKUP, async (event) => {
+  ipcMain.handle(channels.BACKUP, requireAdmin(async (event) => {
     try {
       const win = BrowserWindow.fromWebContents(event.sender)
       if (!win) {
@@ -66,10 +67,10 @@ export function registerDatabaseHandlers() {
     } catch (err) {
       return { success: false, error: (err as Error).message }
     }
-  })
+  }))
 
   // ─── Restore ──────────────────────────────────────────────
-  ipcMain.handle(channels.RESTORE, async (event) => {
+  ipcMain.handle(channels.RESTORE, requireAdmin(async (event) => {
     try {
       const win = BrowserWindow.fromWebContents(event.sender)
       if (!win) {
@@ -100,7 +101,7 @@ export function registerDatabaseHandlers() {
       // Reintentar reconexión de Prisma en caso de error (el service desconectó).
       return { success: false, error: (err as Error).message }
     }
-  })
+  }))
 
   // ─── Info ─────────────────────────────────────────────────
   ipcMain.handle(channels.GET_INFO, async () => {
