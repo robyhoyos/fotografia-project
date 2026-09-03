@@ -4,6 +4,8 @@
 
 import { app, BrowserWindow, shell } from 'electron'
 import path from 'path'
+import { execFile, execSync } from 'child_process'
+import { isPackaged } from './database/paths'
 // El bootstrap DEBE importarse antes de ./database/prisma para que DATABASE_URL
 // esté definido (ruta escribible en producción) cuando se construya PrismaClient.
 import './database/bootstrap'
@@ -224,8 +226,100 @@ app.on('window-all-closed', async () => {
 
   if (process.platform !== 'darwin') {
     app.quit()
+    // En desarrollo, al cerrar la app, detener también el proceso dev
+    // (concurrently -> vite) para liberar el puerto y no dejar procesos colgados.
+    teardownDevProcess()
   }
 })
+
+/**
+ * @function teardownDevProcess
+ * @description Solo en desarrollo: detiene el proceso `concurrently` que lanzó
+ * el pipeline dev (npm run dev → concurrently → vite / electron). Al bajar su
+ * árbol con taskkill /T, `vite` termina y se libera el puerto del dev server,
+ * sin matar la terminal del usuario. En producción no hace nada.
+ */
+function teardownDevProcess(): void {
+  if (isPackaged()) return
+
+  // Subir la cadena de procesos y detectar el `concurrently` (node dev) para
+  // detenerlo junto a todo su árbol (vite incluido).
+  let root = process.ppid
+  let guard = 0
+  while (root && root > 0 && root !== process.pid && guard < 12) {
+    try {
+      const commandLine = getCommandLine(root)
+      // El pipeline `concurrently` se identifica por contener su binario en la
+      // línea de comandos; es el punto de ramificación hacia vite/electron.
+      if (/concurrently/.test(commandLine)) {
+        break
+      }
+    } catch {
+      /* ancestro ya terminado */
+    }
+    const parent = getParentPid(root)
+    if (parent && parent > 0 && parent !== root) {
+      root = parent
+    } else {
+      break
+    }
+    guard += 1
+  }
+
+  if (root && root > 0) {
+    if (process.platform === 'win32') {
+      execFile('taskkill', ['/PID', String(root), '/T', '/F'], (err) => {
+        if (err) {
+          console.warn('[Main] No se pudo detener el proceso dev:', err.message)
+        }
+      })
+    } else {
+      // POSIX: terminar el grupo de procesos.
+      try {
+        process.kill(-root, 'SIGTERM')
+      } catch {
+        try {
+          process.kill(root, 'SIGTERM')
+        } catch {
+          /* proceso ya cerrado */
+        }
+      }
+    }
+  }
+}
+
+/**
+ * @function getParentPid
+ * @description Devuelve el PID padre del proceso indicado (Windows vía PowerShell).
+ */
+function getParentPid(pid: number): number {
+  try {
+    const result = execSync(
+      `powershell -NoProfile -Command "(Get-CimInstance Win32_Process -Filter 'ProcessId=${pid}').ParentProcessId"`,
+      { encoding: 'utf8', windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] },
+    )
+    const n = parseInt(result.trim(), 10)
+    return Number.isFinite(n) ? n : 0
+  } catch {
+    return 0
+  }
+}
+
+/**
+ * @function getCommandLine
+ * @description Devuelve la línea de comandos de un proceso (Windows vía PowerShell).
+ */
+function getCommandLine(pid: number): string {
+  try {
+    const result = execSync(
+      `powershell -NoProfile -Command "(Get-CimInstance Win32_Process -Filter 'ProcessId=${pid}').CommandLine"`,
+      { encoding: 'utf8', windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] },
+    )
+    return result.trim()
+  } catch {
+    return ''
+  }
+}
 
 // Manejo de errores no capturados
 process.on('uncaughtException', async (error) => {
