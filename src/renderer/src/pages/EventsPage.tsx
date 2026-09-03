@@ -22,8 +22,9 @@ import { ConfirmDialog } from '../components/ui/ConfirmDialog'
 import { useToast } from '../hooks/useToast'
 import { useRole } from '../hooks/useRole'
 import { formatCOP } from '../lib/format'
-import type { EventWithParticipants } from '../../../../shared/types/ipc'
-import type { ParticipantSummary } from '../../../../shared/types/ipc'
+import type { StoredEvent } from '../../../../shared/types/ipc'
+import type { ParticipantSummary, ParticipantItem, EventWithParticipants } from '../../../../shared/types/ipc'
+import type { BulkUpdateStatusInput } from '../../../../shared/schemas/participant.schema'
 
 export function EventsPage() {
   const {
@@ -62,6 +63,7 @@ export function EventsPage() {
     title: string
     message: string
     variant: 'danger' | 'warning' | 'info'
+    confirmLabel?: string
     onConfirm: () => void
   }>({
     isOpen: false,
@@ -111,8 +113,8 @@ export function EventsPage() {
     setParticipantSearch('')
   }
 
-  const handleEditEvent = (event: EventWithParticipants) => {
-    openDrawer('event-edit', event)
+  const handleEditEvent = (event: StoredEvent) => {
+    openDrawer('event-edit', event as EventWithParticipants)
   }
 
   const handleDeleteEvent = (eventId: string) => {
@@ -122,6 +124,7 @@ export function EventsPage() {
       message:
         '¿Eliminar este evento y todos sus participantes? Esta acción no se puede deshacer.',
       variant: 'danger',
+      confirmLabel: 'Eliminar',
       onConfirm: () => {
         deleteEventMutation.mutate(eventId, {
           onSuccess: () => {
@@ -147,6 +150,7 @@ export function EventsPage() {
       title: 'Eliminar Participante',
       message: '¿Eliminar este participante? Esta acción no se puede deshacer.',
       variant: 'danger',
+      confirmLabel: 'Eliminar',
       onConfirm: () => {
         deleteParticipantMutation.mutate(participantId, {
           onSuccess: () => success('Participante eliminado'),
@@ -159,7 +163,7 @@ export function EventsPage() {
 
   const handleBulkStatusChange = (ids: string[], status: string, onSuccess?: () => void) => {
     bulkStatusMutation.mutate(
-      { participantIds: ids, status: status as any },
+      { participantIds: ids, status: status as BulkUpdateStatusInput['status'] },
       {
         onSuccess: () => {
           success('Estado actualizado', `${ids.length} participantes actualizados`)
@@ -176,6 +180,7 @@ export function EventsPage() {
       title: 'Eliminar Participantes',
       message: `¿Eliminar ${ids.length} participantes? Esta acción no se puede deshacer.`,
       variant: 'danger',
+      confirmLabel: 'Eliminar',
       onConfirm: () => {
         bulkDeleteMutation.mutate(
           { participantIds: ids },
@@ -206,6 +211,7 @@ export function EventsPage() {
       title: `Cambiar a ${label}`,
       message: `¿Cambiar el estado del evento a "${label}"?`,
       variant: newStatus === 'CANCELADO' ? 'danger' : 'warning',
+      confirmLabel: 'Cambiar',
       onConfirm: () => {
         updateEventMutation.mutate(
           { id: selectedEventId, status: newStatus as 'ACTIVO' | 'FINALIZADO' | 'CANCELADO' },
@@ -224,7 +230,7 @@ export function EventsPage() {
   const mutedText = t.textMuted
 
   const selectedEvent = eventsData?.items?.find(
-    (e: EventWithParticipants) => e.id === selectedEventId
+    (e: StoredEvent) => e.id === selectedEventId
   )
 
   return (
@@ -562,7 +568,7 @@ className={`flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-m
           eventName={selectedEvent.name}
           eventDate={selectedEvent.date}
           eventLocation={selectedEvent.location ?? null}
-          participants={participantsData.items.map((p: any) => ({
+          participants={participantsData.items.map((p: ParticipantItem) => ({
             name: p.name,
             phone: p.phone ?? null,
             email: p.email ?? null,
@@ -582,7 +588,7 @@ className={`flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-m
         title={confirmState.title}
         message={confirmState.message}
         variant={confirmState.variant}
-        confirmLabel="Eliminar"
+        confirmLabel={confirmState.confirmLabel || 'Confirmar'}
         onConfirm={confirmState.onConfirm}
         onCancel={() => setConfirmState((s) => ({ ...s, isOpen: false }))}
       />

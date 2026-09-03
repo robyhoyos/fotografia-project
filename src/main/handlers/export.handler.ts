@@ -47,18 +47,6 @@ function toArgb(hex?: string): string | null {
   return 'FF' + hex.slice(1).toUpperCase()
 }
 
-// Índice de columna (1-based) → letra de columna de Excel ("A", "B", …)
-function columnLetter(index: number): string {
-  let n = index
-  let letters = ''
-  while (n > 0) {
-    const mod = (n - 1) % 26
-    letters = String.fromCharCode(65 + mod) + letters
-    n = Math.floor((n - 1) / 26)
-  }
-  return letters
-}
-
 /**
  * @function formatDate
  * @description Formatea una fecha ISO a formato legible dd/mm/yyyy.
@@ -199,7 +187,6 @@ export function registerExportHandlers(settingsService: SettingsService) {
       ws.properties.defaultRowHeight = 18
 
       const lastCol = columns.length
-      const lastColLetter = columnLetter(lastCol)
 
       // ─── Banner de marca ───────────────────────────────────────
       // Fila 1: banda oscura con el nombre comercial + tagline
@@ -267,7 +254,7 @@ export function registerExportHandlers(settingsService: SettingsService) {
       }
 
       // ─── Filas de datos ────────────────────────────────────────
-      let maxWidths: number[] = columns.map((col) => col.header.length)
+      const maxWidths: number[] = columns.map((col) => col.header.length)
 
       const FIRST_DATA_ROW = 6
       rows.forEach((row, rowIdx) => {

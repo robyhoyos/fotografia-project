@@ -111,7 +111,6 @@ export function SettingsPage() {
     const handler = (e: BeforeUnloadEvent) => {
       if (hasChanges) {
         e.preventDefault()
-        // eslint-disable-next-line no-param-reassign
         e.returnValue = ''
       }
     }
@@ -453,7 +452,6 @@ function DatabaseInfoCard({ theme }: { theme: 'dark' | 'light' }) {
 
   useEffect(() => {
     load()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const cardClass =

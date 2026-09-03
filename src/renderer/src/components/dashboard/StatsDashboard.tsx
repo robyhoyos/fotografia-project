@@ -11,7 +11,7 @@ import { useThemeTokens } from '../../lib/theme'
 import { useDashboardStats } from '../../hooks/useDashboard'
 import { useReceivables } from '../../hooks/useAlerts'
 import { formatCOP } from '../../lib/format'
-import type { EventWithParticipants } from '../../../../../shared/types/ipc'
+import type { StoredEvent } from '../../../../../shared/types/ipc'
 
 const CATEGORIES = [
   { value: 'SACRAMENTAL', label: 'Sacramental', badge: 'badgeAmber' as const },
@@ -31,7 +31,7 @@ export function StatsDashboard() {
     category: (category || undefined) as 'SACRAMENTAL' | 'ESCOLAR' | 'ESTUDIO' | undefined,
   })
 
-  const openEvent = (event: EventWithParticipants) => {
+  const openEvent = (event: StoredEvent) => {
     requestEvent(event.id)
     setActiveView('events')
   }

@@ -39,14 +39,19 @@ export function getAuthService(): AuthService {
   return authService
 }
 
-type IpcHandler = (event: Electron.IpcMainInvokeEvent, ...args: any[]) => any
+type IpcHandler<TArgs extends unknown[] = unknown[]> = (
+  event: Electron.IpcMainInvokeEvent,
+  ...args: TArgs
+) => unknown
 
 /**
  * @function requireAuth
  * @description Exige que exista una sesión activa. Devuelve error sin ejecutar
  * la lógica si el renderer no ha iniciado sesión.
  */
-export function requireAuth(handler: IpcHandler): IpcHandler {
+export function requireAuth<TArgs extends unknown[]>(
+  handler: IpcHandler<TArgs>
+): IpcHandler<TArgs> {
   return async (event, ...args) => {
     if (!getAuthService().isAuthenticated()) {
       return authError('Debes iniciar sesión para realizar esta acción')
@@ -60,9 +65,12 @@ export function requireAuth(handler: IpcHandler): IpcHandler {
  * @description Exige sesión activa y un rol dentro de la lista permitida.
  * Uso: requireRole(['ADMIN'], handler) o requireRole('ADMIN', handler).
  */
-export function requireRole(roles: AppRole | AppRole[], handler: IpcHandler): IpcHandler {
+export function requireRole<TArgs extends unknown[]>(
+  roles: AppRole | AppRole[],
+  handler: IpcHandler<TArgs>
+): IpcHandler<TArgs> {
   const allowed = Array.isArray(roles) ? roles : [roles]
-  return requireAuth(async (event, ...args) => {
+  return requireAuth<TArgs>(async (event, ...args) => {
     const user = getAuthService().getCurrent()
     if (!user || !allowed.includes(user.role)) {
       return authError('No tienes permisos para realizar esta acción')
@@ -75,8 +83,10 @@ export function requireRole(roles: AppRole | AppRole[], handler: IpcHandler): Ip
  * @function requireAdmin
  * @description Atajo para handlers exclusivos de administrador.
  */
-export function requireAdmin(handler: IpcHandler): IpcHandler {
-  return requireRole('ADMIN', handler)
+export function requireAdmin<TArgs extends unknown[]>(
+  handler: IpcHandler<TArgs>
+): IpcHandler<TArgs> {
+  return requireRole<TArgs>('ADMIN', handler)
 }
 
 function authError(error: string): ApiResponse<never> {

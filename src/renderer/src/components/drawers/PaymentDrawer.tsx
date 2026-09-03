@@ -10,6 +10,7 @@ import { useToast } from '../../hooks/useToast'
 import { formatCOP } from '../../lib/format'
 import { useCurrencyInput } from '../../lib/currencyInput'
 import type { ParticipantSummary } from '../../../../../shared/types/ipc'
+import type { UpdateParticipantInput } from '../../../../../shared/schemas/participant.schema'
 
 export function PaymentDrawer({ eventId }: { eventId: string }) {
   const { activeDrawer, closeDrawer } = useUIStore()
@@ -49,7 +50,7 @@ export function PaymentDrawer({ eventId }: { eventId: string }) {
         Math.round(rem / 2),
       ].filter((v) => v > 0 && v !== rem).slice(0, 3))
     }
-  }, [participant, isOpen])
+  }, [participant, isOpen, setAmount])
 
   const handlePay = () => {
     if (!participant) return
@@ -72,7 +73,7 @@ export function PaymentDrawer({ eventId }: { eventId: string }) {
       {
         id: participant.id,
         paidAmount: newPaidAmount,
-        paymentStatus: newPaymentStatus as any,
+        paymentStatus: newPaymentStatus as UpdateParticipantInput['paymentStatus'],
       },
       {
         onSuccess: () => {

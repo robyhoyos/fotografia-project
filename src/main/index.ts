@@ -4,6 +4,9 @@
 
 import { app, BrowserWindow, shell } from 'electron'
 import path from 'path'
+// El bootstrap DEBE importarse antes de ./database/prisma para que DATABASE_URL
+// esté definido (ruta escribible en producción) cuando se construya PrismaClient.
+import './database/bootstrap'
 import prisma from './database/prisma'
 import { EventRepository } from './repositories/event.repository'
 import { ParticipantRepository } from './repositories/participant.repository'
@@ -107,18 +110,21 @@ function createWindow(): void {
     )
   }
 
-  // ─── DevTools siempre accesible con F12 / Ctrl+Shift+I ─────────
-  // Evita el problema de que el atajo se pierda si la ventana pierde foco.
-  mainWindow.webContents.on('before-input-event', (_event, input) => {
-    if (input.type !== 'keyDown') return
-    const isF12 = input.key === 'F12'
-    const isCtrlShiftI =
-      input.control && input.shift && input.key.toLowerCase() === 'i'
-    if (isF12 || isCtrlShiftI) {
-      mainWindow?.webContents.toggleDevTools()
-      _event.preventDefault()
-    }
-  })
+  // ─── DevTools solo en desarrollo ─────────────────────────────
+  // En dev, F12 / Ctrl+Shift+I abren las herramientas. En producción
+  // se bloquean para que el usuario final no pueda abrir la consola.
+  if (!app.isPackaged) {
+    mainWindow.webContents.on('before-input-event', (_event, input) => {
+      if (input.type !== 'keyDown') return
+      const isF12 = input.key === 'F12'
+      const isCtrlShiftI =
+        input.control && input.shift && input.key.toLowerCase() === 'i'
+      if (isF12 || isCtrlShiftI) {
+        mainWindow?.webContents.toggleDevTools()
+        _event.preventDefault()
+      }
+    })
+  }
 
   // Mostrar ventana cuando esté lista (evita flash blanco)
   mainWindow.once('ready-to-show', () => {
@@ -187,7 +193,7 @@ async function initializeServices(): Promise<void> {
   registerIncidentHandlers(incidentService)
   registerDialogHandlers()
 
-  console.log('[Main] Services y handlers IPC inicializados')
+  console.info('[Main] Services y handlers IPC inicializados')
 }
 
 // ─── Lifecycle de la aplicación ──────────────────────────────────────
@@ -195,7 +201,7 @@ async function initializeServices(): Promise<void> {
 app.whenReady().then(async () => {
   // Conectar a Prisma/SQLite
   await prisma.$connect()
-  console.log('[Main] Conectado a SQLite via Prisma')
+  console.info('[Main] Conectado a SQLite via Prisma')
 
   // Inicializar servicios y handlers IPC
   await initializeServices()
@@ -214,7 +220,7 @@ app.whenReady().then(async () => {
 // Cerrar limpiamente al cerrar todas las ventanas
 app.on('window-all-closed', async () => {
   await prisma.$disconnect()
-  console.log('[Main] Desconectado de SQLite')
+  console.info('[Main] Desconectado de SQLite')
 
   if (process.platform !== 'darwin') {
     app.quit()

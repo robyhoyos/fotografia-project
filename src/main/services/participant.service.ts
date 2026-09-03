@@ -294,7 +294,7 @@ function getParticipantTotalDue(participant: {
   const items = participant.items
   if (Array.isArray(items)) {
     const itemsTotal = items.reduce(
-      (sum, item: any) => sum + (Number(item?.subtotal ?? 0) || 0),
+      (sum, item) => sum + (Number((item as { subtotal?: unknown })?.subtotal ?? 0) || 0),
       0
     )
     if (itemsTotal > 0) return itemsTotal

@@ -20,6 +20,7 @@ import { formatCOP } from '../../lib/format'
 import { isValidColombianPhone } from '../../../../../shared/schemas/participant.schema'
 import { PaymentHistory } from '../ui/PaymentHistory'
 import type { ParticipantSummary, PurchaseItem } from '../../../../../shared/types/ipc'
+import type { UpdateParticipantInput } from '../../../../../shared/schemas/participant.schema'
 
 /**
  * @interface ParticipantDrawerProps
@@ -84,7 +85,7 @@ function itemsTotal(items: CartItem[]): number {
  * ```
  */
 export function ParticipantDrawer({ eventId }: ParticipantDrawerProps) {
-  const { activeDrawer, closeDrawer, openDrawer } = useUIStore()
+  const { activeDrawer, closeDrawer } = useUIStore()
   const t = useThemeTokens()
   const { readOnly } = useRole()
   const dark = useUIStore((s) => s.theme) === 'dark'
@@ -94,7 +95,6 @@ export function ParticipantDrawer({ eventId }: ParticipantDrawerProps) {
   const valCls = dark ? 'text-gray-300' : 'text-gray-700'
   const valClsSm = dark ? 'text-gray-300' : 'text-gray-600'
   const muteCls = dark ? 'text-gray-400' : 'text-gray-500'
-  const faintCls = dark ? 'text-gray-500' : 'text-gray-500'
   const inputBase =
     'mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ' +
     (dark
@@ -200,7 +200,7 @@ export function ParticipantDrawer({ eventId }: ParticipantDrawerProps) {
         setIsEditing(activeDrawer.type === 'participant-edit')
       }
     }
-  }, [participant, isOpen, activeDrawer.type, isCreateMode])
+  }, [participant, isOpen, activeDrawer.type, isCreateMode, createData?.coverPrice])
 
   // ─── Detalle de Compra: handlers ────────────────────────────
 
@@ -308,7 +308,7 @@ export function ParticipantDrawer({ eventId }: ParticipantDrawerProps) {
       createMutation.mutate(
         { eventId, ...payload },
         {
-          onSuccess: (created: any) => {
+          onSuccess: (created: ParticipantSummary | undefined) => {
             // Registrar el pago directamente al crear el participante
             if (paymentOption !== 'SIN_PAGO' && created?.id) {
               const amount =
@@ -369,7 +369,7 @@ export function ParticipantDrawer({ eventId }: ParticipantDrawerProps) {
     if (!participant) return
     updateMutation.mutate({
       id: participant.id,
-      status: newStatus as any,
+      status: newStatus as UpdateParticipantInput['status'],
       ...(newStatus === 'ENTREGADO' && {
         deliveredAt: new Date().toISOString(),
       }),

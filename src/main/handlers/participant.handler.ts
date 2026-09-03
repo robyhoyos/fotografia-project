@@ -15,8 +15,18 @@ import {
   SetCustomerRatingSchema,
 } from '../../../shared/schemas/participant.schema'
 import { IPC_CHANNELS } from '../../../shared/types/ipc'
-import type { ApiResponse } from '../../../shared/types/ipc'
-import { requireAdmin, requireRole } from '../auth/permissions'
+import type {
+  ApiResponse,
+  CustomerSummary,
+  BulkUpdateResult,
+  BulkDeleteResult,
+  ImportCsvResult,
+} from '../../../shared/types/ipc'
+import type {
+  RawParticipant,
+  RawListParticipants,
+} from '../types/raw'
+import { requireAdmin } from '../auth/permissions'
 
 /**
  * @function registerParticipantHandlers
@@ -47,7 +57,7 @@ export function registerParticipantHandlers(
   ipcMain.handle(
     customerChannels.LIST,
     requireAdmin(
-      async (): Promise<ApiResponse<any>> => {
+      async (): Promise<ApiResponse<CustomerSummary[]>> => {
         try {
           const data = await participantService.listCustomers()
           return { success: true, data }
@@ -73,7 +83,7 @@ export function registerParticipantHandlers(
   ipcMain.handle(
     customerChannels.SET_RATING,
     requireAdmin(
-      async (_, payload: { cedula: string; rating: number | null }): Promise<ApiResponse<any>> => {
+      async (_, payload: { cedula: string; rating: number | null }): Promise<ApiResponse<number>> => {
         try {
           const data = SetCustomerRatingSchema.parse(payload)
           const result = await participantService.setCustomerRating(data.cedula, data.rating)
@@ -97,7 +107,7 @@ export function registerParticipantHandlers(
    */
   ipcMain.handle(
     channels.GET_BY_EVENT,
-    async (_, payload): Promise<ApiResponse<any>> => {
+    async (_, payload): Promise<ApiResponse<RawListParticipants>> => {
       try {
         const params = ListParticipantsSchema.parse(payload)
         const data = await participantService.getByEvent(params)
@@ -120,7 +130,7 @@ export function registerParticipantHandlers(
    */
   ipcMain.handle(
     channels.GET_BY_ID,
-    async (_, payload: { id: string }): Promise<ApiResponse<any>> => {
+    async (_, payload: { id: string }): Promise<ApiResponse<RawParticipant | null>> => {
       try {
         const data = await participantService.getById(payload.id)
         return { success: true, data }
@@ -142,7 +152,7 @@ export function registerParticipantHandlers(
    */
   ipcMain.handle(
     channels.GET_BY_BARCODE,
-    async (_, payload: { barcode: string }): Promise<ApiResponse<any>> => {
+    async (_, payload: { barcode: string }): Promise<ApiResponse<RawParticipant | null>> => {
       try {
         const data = await participantService.getByBarcode(payload.barcode)
         return { success: true, data }
@@ -165,7 +175,7 @@ export function registerParticipantHandlers(
   ipcMain.handle(
     channels.CREATE,
     requireAdmin(
-      async (_, payload): Promise<ApiResponse<any>> => {
+      async (_, payload): Promise<ApiResponse<RawParticipant>> => {
         try {
           const data = CreateParticipantSchema.parse(payload)
           const participant = await participantService.create(data)
@@ -194,7 +204,7 @@ export function registerParticipantHandlers(
   ipcMain.handle(
     channels.UPDATE,
     requireAdmin(
-      async (_, payload): Promise<ApiResponse<any>> => {
+      async (_, payload): Promise<ApiResponse<RawParticipant>> => {
         try {
           const data = UpdateParticipantSchema.parse(payload)
           const participant = await participantService.update(data)
@@ -223,7 +233,7 @@ export function registerParticipantHandlers(
   ipcMain.handle(
     channels.DELETE,
     requireAdmin(
-      async (_, payload: { id: string }): Promise<ApiResponse<any>> => {
+      async (_, payload: { id: string }): Promise<ApiResponse<null>> => {
         try {
           await participantService.delete(payload.id)
           return {
@@ -256,7 +266,7 @@ export function registerParticipantHandlers(
   ipcMain.handle(
     channels.BULK_UPDATE_STATUS,
     requireAdmin(
-      async (_, payload): Promise<ApiResponse<any>> => {
+      async (_, payload): Promise<ApiResponse<BulkUpdateResult>> => {
         try {
           const data = BulkUpdateStatusSchema.parse(payload)
           const result = await participantService.bulkUpdateStatus(data)
@@ -285,7 +295,7 @@ export function registerParticipantHandlers(
   ipcMain.handle(
     channels.BULK_UPDATE_PAYMENT,
     requireAdmin(
-      async (_, payload): Promise<ApiResponse<any>> => {
+      async (_, payload): Promise<ApiResponse<BulkUpdateResult>> => {
         try {
           const data = BulkUpdatePaymentSchema.parse(payload)
           const result = await participantService.bulkUpdatePayment(data)
@@ -314,7 +324,7 @@ export function registerParticipantHandlers(
   ipcMain.handle(
     channels.BULK_DELETE,
     requireAdmin(
-      async (_, payload): Promise<ApiResponse<any>> => {
+      async (_, payload): Promise<ApiResponse<BulkDeleteResult>> => {
         try {
           const data = BulkDeleteSchema.parse(payload)
           const result = await participantService.bulkDelete(data)
@@ -352,7 +362,7 @@ export function registerParticipantHandlers(
   ipcMain.handle(
     channels.IMPORT_CSV,
     requireAdmin(
-      async (_, payload): Promise<ApiResponse<any>> => {
+      async (_, payload): Promise<ApiResponse<ImportCsvResult>> => {
         try {
           const data = ImportCsvSchema.parse(payload)
           const result = await participantService.importCsv(data)

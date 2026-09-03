@@ -19,6 +19,7 @@ import type {
   UpdateEventInput,
   ListEventsInput,
 } from '../../../../shared/schemas/event.schema'
+import type { EventWithParticipants } from '../../../../shared/types/ipc'
 
 // ─── Query Keys ─────────────────────────────────────────────────────
 // Centralizadas para facilitar invalidación de caché
@@ -174,7 +175,7 @@ export function useUpdateEvent() {
       // Optimistic update
       queryClient.setQueryData(
         eventKeys.detail(newData.id),
-        (old: any) => ({ ...old, ...newData })
+        (old: EventWithParticipants) => ({ ...old, ...newData })
       )
 
       return { previousEvent }

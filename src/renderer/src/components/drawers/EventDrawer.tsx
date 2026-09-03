@@ -2,7 +2,7 @@
 // Drawer lateral para crear y editar eventos.
 // Soporta dos modos: creación y edición con formulario tipado.
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useUIStore } from '../../stores/ui.store'
 import { useThemeTokens } from '../../lib/theme'
 import {
@@ -12,8 +12,8 @@ import {
 import { useToast } from '../../hooks/useToast'
 import { useSettingValue } from '../../hooks/useSettings'
 import { CategorySubtypeMap } from '../../../../../shared/schemas/event.schema'
-import type { CreateEventInput, UpdateEventInput } from '../../../../../shared/schemas/event.schema'
-import type { EventWithParticipants } from '../../../../../shared/types/ipc'
+import type { CreateEventInput } from '../../../../../shared/schemas/event.schema'
+import type { StoredEvent } from '../../../../../shared/types/ipc'
 
 const SUBTYPE_LABELS: Record<string, string> = {
   BODA: 'Boda',
@@ -60,7 +60,7 @@ export function EventDrawer() {
   const t = useThemeTokens()
   const dark = useUIStore((s) => s.theme) === 'dark'
   const isOpen = activeDrawer.type === 'event-edit'
-  const editEvent = activeDrawer.data as EventWithParticipants | null
+  const editEvent = activeDrawer.data as StoredEvent | null
   const isEditing = !!editEvent?.id
 
   const { success, error: toastError } = useToast()
@@ -107,13 +107,16 @@ export function EventDrawer() {
     }
   }, [isOpen, editEvent, defaultCategory, defaultSubtype, defaultCoverPrice])
 
-  const availableSubtypes = CategorySubtypeMap[formData.category] || []
+  const availableSubtypes = useMemo(
+    () => CategorySubtypeMap[formData.category] || [],
+    [formData.category]
+  )
 
   useEffect(() => {
     if (!availableSubtypes.includes(formData.subtype)) {
       setFormData((prev) => ({ ...prev, subtype: availableSubtypes[0] || '' }))
     }
-  }, [formData.category])
+  }, [formData.category, formData.subtype, availableSubtypes])
 
   const validate = (): boolean => {
     const newErrors: Partial<Record<keyof EventFormData, string>> = {}

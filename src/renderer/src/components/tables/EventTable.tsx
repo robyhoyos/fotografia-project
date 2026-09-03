@@ -4,12 +4,12 @@
 import React from 'react'
 import { useThemeTokens } from '../../lib/theme'
 import { formatCOP } from '../../lib/format'
-import type { EventWithParticipants } from '../../../../../shared/types/ipc'
+import type { StoredEvent } from '../../../../../shared/types/ipc'
 
 interface EventTableProps {
-  events: EventWithParticipants[]
+  events: StoredEvent[]
   isLoading: boolean
-  onEdit: (event: EventWithParticipants) => void
+  onEdit: (event: StoredEvent) => void
   onDelete: (eventId: string) => void
   onSelectEvent: (eventId: string) => void
   readOnly?: boolean
@@ -98,7 +98,16 @@ export function EventTable({
             <tr
               key={event.id}
               className={`group cursor-pointer transition-colors ${t.rowHover}`}
+              tabIndex={0}
+              role="button"
+              aria-label={`Abrir detalle del evento ${event.name}`}
               onClick={() => onSelectEvent(event.id)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  onSelectEvent(event.id)
+                }
+              }}
             >
               <td className="px-6 py-4">
                 <div className="flex items-center gap-3">

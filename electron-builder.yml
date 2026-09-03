@@ -1,0 +1,70 @@
+# electron-builder.yml
+# Configuración de empaquetado para generar el instalador .exe (NSIS) y portable.
+
+appId: com.fotografia.gestion
+productName: Gestión Fotográfica
+copyright: Copyright © 2026
+
+directories:
+  output: dist-app
+  buildResources: build
+
+# asar: false es OBLIGATORIO para que Prisma pueda cargar su query-engine
+# nativo (.node) directamente desde el sistema de archivos. Con asar, los
+# binarios .node no se pueden cargar.
+asar: false
+
+files:
+  - package.json
+  - dist/**
+  - node_modules/**/*
+  - node_modules/.prisma/**/*
+  - '!**/*.map'
+  - '!src/**'
+  - '!tests/**'
+  - '!shots/**'
+  - '!e2e/**'
+  - '!playwright.config.*'
+  - '!playwright.electron.config.*'
+  - '!generate-icon.js'
+
+win:
+  target:
+    - nsis
+    - portable
+  icon: build/icon.png
+  # Establece la versión exacta de Electron a usar (coincide con la instalada).
+  executableName: GestionFotografica
+  # Desactiva edición de recursos y firma del .exe. Esto evita que
+  # electron-builder descargue/descomprima `winCodeSign`, que falla en sistemas
+  # sin Modo desarrollador (no puede crear symlinks: libcrypto.dylib/libssl.dylib).
+  # Coste: el exe conserva el icono/nombre genérico de Electron en sus metadatos,
+  # aunque el instalador y la app funcionan correctamente.
+  signAndEditExecutable: false
+
+# Visualización y artefactos del instalador
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Gestión Fotográfica
+  uninstallDisplayName: Gestión Fotográfica
+  deleteAppDataOnUninstall: false
+
+electronDownload:
+  cache: null
+
+# No reconstruir paquetes nativos; los binarios ya presentes (Prisma .node)
+# se incluyen tal cual. Evita pasos extra al empaquetar.
+npmRebuild: false
+
+# Los binarios de Prisma se incluyen descomprimidos (redundante con asar:false,
+# pero explícito y a prueba de futuros cambios).
+extraResources:
+  - from: node_modules/.prisma/client
+    to: prisma/client
+
+# Empaquetar solo la plataforma actual (Windows x64).
+# Para producción multiplataforma habría que ajustar aquí.

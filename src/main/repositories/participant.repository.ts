@@ -3,7 +3,7 @@
 // Maneja CRUD individual, acciones en lote (HU-D6) e importación masiva (HU-D5).
 
 import { PrismaClient, Prisma, ParticipantStatus, PaymentStatus } from '@prisma/client'
-import type { CustomerSummary } from '../../../shared/types/ipc'
+import type { CustomerSummary, PurchaseItem } from '../../../shared/types/ipc'
 import type {
   CreateParticipantInput,
   UpdateParticipantInput,
@@ -151,7 +151,7 @@ export class ParticipantRepository {
         notes: data.notes ?? null,
         quantity,
         unitPrice,
-        items,
+        items: items as unknown as Prisma.InputJsonValue,
         totalAmount: computeTotal(items),
         barcode,
       },
@@ -187,7 +187,7 @@ export class ParticipantRepository {
       const normalized = this.normalizePurchase(items, quantity, unitPrice)
       updateData.quantity = normalized.quantity
       updateData.unitPrice = normalized.unitPrice
-      updateData.items = normalized.items
+      updateData.items = normalized.items as unknown as Prisma.InputJsonValue
       updateData.totalAmount = computeTotal(normalized.items)
     } else if (quantity !== undefined || unitPrice !== undefined) {
       // Compatibilidad: si solo cambia cantidad/precio unitario, sincroniza el primer ítem
@@ -203,7 +203,7 @@ export class ParticipantRepository {
       )
       updateData.quantity = normalized.quantity
       updateData.unitPrice = normalized.unitPrice
-      updateData.items = normalized.items
+      updateData.items = normalized.items as unknown as Prisma.InputJsonValue
       updateData.totalAmount = computeTotal(normalized.items)
     }
 
@@ -352,11 +352,11 @@ export class ParticipantRepository {
    * @returns { items, quantity, unitPrice } normalizado y listo para persistir
    */
   private normalizePurchase(
-    items: any[] | undefined,
+    items: PurchaseItem[] | undefined,
     quantity?: number,
     unitPrice?: number | null
   ) {
-    let normalizedItems: any[] = this.parseItems(items)
+    let normalizedItems: PurchaseItem[] = this.parseItems(items)
 
     if (normalizedItems.length === 0) {
       // Sin ítems explícitos → construir uno desde el paquete base
@@ -365,7 +365,7 @@ export class ParticipantRepository {
           id: (unitPrice && unitPrice.toString()) || 'base-item',
           descripcion: '',
           cantidad: quantity ?? 1,
-          precio_unitario: unitPrice ?? null,
+          precio_unitario: unitPrice ?? 0,
           subtotal: (unitPrice ?? 0) * (quantity ?? 1),
         },
       ]
@@ -389,7 +389,7 @@ export class ParticipantRepository {
    * Prisma devuelve Json como array en memoria, pero en SQLite puede
    * llegar como string JSON; por eso se normaliza aquí.
    */
-  private parseItems(items: any): any[] {
+  private parseItems(items: unknown): PurchaseItem[] {
     if (!items) return []
     if (Array.isArray(items)) return items
     if (typeof items === 'string') {
@@ -503,7 +503,7 @@ export class ParticipantRepository {
  * @description Calcula la suma de subtotales del detalle de compra.
  * Cada ítem aporta `subtotal = cantidad * precio_unitario`.
  */
-function computeTotal(items: any[] = []): number {
+function computeTotal(items: PurchaseItem[] = []): number {
   return items.reduce(
     (sum, item) =>
       sum + (Number(item?.subtotal ?? 0) || 0),

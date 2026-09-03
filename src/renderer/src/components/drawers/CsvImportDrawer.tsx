@@ -140,6 +140,7 @@ export function CsvImportDrawer() {
       { eventId, rows: validRows },
       {
         onSuccess: (data) => {
+          if (!data) return
           success(
             'Importación completada',
             `${data.imported} participantes importados` +

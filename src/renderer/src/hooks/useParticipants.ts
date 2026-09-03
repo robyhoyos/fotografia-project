@@ -13,11 +13,11 @@ import type {
   UpdateParticipantInput,
   ListParticipantsInput,
   BulkUpdateStatusInput,
-  BulkUpdatePaymentInput,
   BulkDeleteInput,
   ImportCsvInput,
 } from '../../../../shared/schemas/participant.schema'
 import { eventKeys } from './useEvents'
+import type { ListParticipantsResponse, ParticipantItem } from '../../../../shared/types/ipc'
 
 // ─── Query Keys ─────────────────────────────────────────────────────
 
@@ -181,11 +181,11 @@ export function useUpdateParticipant(eventId: string) {
       // Actualizar optimísticamente cada query que liste este evento
       queryClient.setQueriesData(
         { queryKey: participantKeys.byEvent(eventId) },
-        (old: any) => {
+        (old: ListParticipantsResponse) => {
           if (!old?.items) return old
           return {
             ...old,
-            items: old.items.map((p: any) =>
+            items: old.items.map((p: ParticipantItem) =>
               p.id === newData.id ? { ...p, ...newData } : p
             ),
           }
@@ -285,11 +285,11 @@ export function useBulkUpdateStatus(eventId: string) {
       // Optimistic: actualizar todos los IDs seleccionados
       queryClient.setQueriesData(
         { queryKey: participantKeys.byEvent(eventId) },
-        (old: any) => {
+        (old: ListParticipantsResponse) => {
           if (!old?.items) return old
           return {
             ...old,
-            items: old.items.map((p: any) =>
+            items: old.items.map((p: ParticipantItem) =>
               newData.participantIds.includes(p.id)
                 ? {
                     ...p,

@@ -52,7 +52,7 @@ const api = {
      * @param payload - { username, password, displayName? }
      * @returns ApiResponse<AuthUser>
      */
-    setupAdmin: (payload: any) =>
+    setupAdmin: (payload: unknown) =>
       ipcRenderer.invoke(IPC_CHANNELS.AUTH.SETUP_ADMIN, payload),
 
     /**
@@ -67,7 +67,7 @@ const api = {
      * @param payload - { username, password }
      * @returns ApiResponse<AuthUser>
      */
-    login: (payload: any) =>
+    login: (payload: unknown) =>
       ipcRenderer.invoke(IPC_CHANNELS.AUTH.LOGIN, payload),
 
     /**
@@ -101,7 +101,7 @@ const api = {
      * @param payload - { username, password, role, displayName? }
      * @returns ApiResponse<AuthUser>
      */
-    createUser: (payload: any) =>
+    createUser: (payload: unknown) =>
       ipcRenderer.invoke(IPC_CHANNELS.AUTH.CREATE_USER, payload),
 
     /**
@@ -116,7 +116,7 @@ const api = {
      * @param payload - { userId, isActive }
      * @returns ApiResponse<null>
      */
-    toggleUser: (payload: any) =>
+    toggleUser: (payload: unknown) =>
       ipcRenderer.invoke(IPC_CHANNELS.AUTH.TOGGLE_USER, payload),
   },
 
@@ -128,7 +128,7 @@ const api = {
      * @param payload - { page, pageSize, category?, search?, sortBy, sortOrder }
      * @returns ApiResponse<PaginatedResponse<Event>>
      */
-    getAll: (payload: any) =>
+    getAll: (payload: unknown) =>
       ipcRenderer.invoke(IPC_CHANNELS.EVENTS.GET_ALL, payload),
 
     /**
@@ -144,7 +144,7 @@ const api = {
      * @param payload - CreateEventInput validado por Zod
      * @returns ApiResponse<Event>
      */
-    create: (payload: any) =>
+    create: (payload: unknown) =>
       ipcRenderer.invoke(IPC_CHANNELS.EVENTS.CREATE, payload),
 
     /**
@@ -152,7 +152,7 @@ const api = {
      * @param payload - UpdateEventInput (ID + campos parciales)
      * @returns ApiResponse<Event>
      */
-    update: (payload: any) =>
+    update: (payload: unknown) =>
       ipcRenderer.invoke(IPC_CHANNELS.EVENTS.UPDATE, payload),
 
     /**
@@ -180,7 +180,7 @@ const api = {
      * @param payload - ListParticipantsInput
      * @returns ApiResponse<PaginatedResponse<Participant>>
      */
-    getByEvent: (payload: any) =>
+    getByEvent: (payload: unknown) =>
       ipcRenderer.invoke(IPC_CHANNELS.PARTICIPANTS.GET_BY_EVENT, payload),
 
     /**
@@ -207,7 +207,7 @@ const api = {
      * @param payload - CreateParticipantInput
      * @returns ApiResponse<Participant>
      */
-    create: (payload: any) =>
+    create: (payload: unknown) =>
       ipcRenderer.invoke(IPC_CHANNELS.PARTICIPANTS.CREATE, payload),
 
     /**
@@ -215,7 +215,7 @@ const api = {
      * @param payload - UpdateParticipantInput
      * @returns ApiResponse<Participant>
      */
-    update: (payload: any) =>
+    update: (payload: unknown) =>
       ipcRenderer.invoke(IPC_CHANNELS.PARTICIPANTS.UPDATE, payload),
 
     /**
@@ -231,7 +231,7 @@ const api = {
      * @param payload - BulkUpdateStatusInput { participantIds, status }
      * @returns ApiResponse<{ updated: number }>
      */
-    bulkUpdateStatus: (payload: any) =>
+    bulkUpdateStatus: (payload: unknown) =>
       ipcRenderer.invoke(
         IPC_CHANNELS.PARTICIPANTS.BULK_UPDATE_STATUS,
         payload
@@ -242,7 +242,7 @@ const api = {
      * @param payload - BulkUpdatePaymentInput
      * @returns ApiResponse<{ updated: number }>
      */
-    bulkUpdatePayment: (payload: any) =>
+    bulkUpdatePayment: (payload: unknown) =>
       ipcRenderer.invoke(
         IPC_CHANNELS.PARTICIPANTS.BULK_UPDATE_PAYMENT,
         payload
@@ -253,7 +253,7 @@ const api = {
      * @param payload - BulkDeleteInput { participantIds }
      * @returns ApiResponse<{ deleted: number }>
      */
-    bulkDelete: (payload: any) =>
+    bulkDelete: (payload: unknown) =>
       ipcRenderer.invoke(
         IPC_CHANNELS.PARTICIPANTS.BULK_DELETE,
         payload
@@ -264,7 +264,7 @@ const api = {
      * @param payload - ImportCsvInput { eventId, rows }
      * @returns ApiResponse<{ imported, errors, total }>
      */
-    importCsv: (payload: any) =>
+    importCsv: (payload: unknown) =>
       ipcRenderer.invoke(
         IPC_CHANNELS.PARTICIPANTS.IMPORT_CSV,
         payload
@@ -323,7 +323,7 @@ const api = {
      * @param payload - { participantId, amount, method?, notes? }
      * @returns ApiResponse<Payment>
      */
-    create: (payload: any) =>
+    create: (payload: unknown) =>
       ipcRenderer.invoke(IPC_CHANNELS.PAYMENTS.CREATE, payload),
 
     /**
@@ -351,7 +351,7 @@ const api = {
      * @param payload - ReceiptData con datos del evento, participante y pagos
      * @returns ApiResponse<{ path: string }>
      */
-    generateReceipt: (payload: any) =>
+    generateReceipt: (payload: unknown) =>
       ipcRenderer.invoke(IPC_CHANNELS.PDF.GENERATE_RECEIPT, payload),
   },
 
@@ -421,7 +421,7 @@ const api = {
      * @param payload - DashboardStatsParams { dateFrom?, dateTo?, category? }
      * @returns ApiResponse<DashboardStats>
      */
-    getStats: (payload?: any) =>
+    getStats: (payload?: unknown) =>
       ipcRenderer.invoke(IPC_CHANNELS.DASHBOARD.GET_STATS, payload ?? {}),
   },
 
@@ -451,7 +451,7 @@ const api = {
      * @param payload - IncidentInput
      * @returns ApiResponse<Incident>
      */
-    createIncident: (payload: any) =>
+    createIncident: (payload: unknown) =>
       ipcRenderer.invoke(IPC_CHANNELS.ALERTS.CREATE_INCIDENT, payload),
 
     /**
@@ -460,7 +460,7 @@ const api = {
      * @param payload - IncidentInput
      * @returns ApiResponse<Incident>
      */
-    updateIncident: (id: string, payload: any) =>
+    updateIncident: (id: string, payload: unknown) =>
       ipcRenderer.invoke(IPC_CHANNELS.ALERTS.UPDATE_INCIDENT, id, payload),
 
     /**

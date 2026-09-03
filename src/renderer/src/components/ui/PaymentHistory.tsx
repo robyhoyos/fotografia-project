@@ -13,6 +13,7 @@ import { useRole } from '../../hooks/useRole'
 import { ConfirmDialog } from './ConfirmDialog'
 import { useThemeTokens } from '../../lib/theme'
 import { useUIStore } from '../../stores/ui.store'
+import type { StoredPayment } from '../../../../../shared/types/ipc'
 
 interface PaymentHistoryProps {
   participantId: string
@@ -127,7 +128,7 @@ export function PaymentHistory({
         paidAmount: summary.paidAmount,
         outstanding: summary.outstanding,
         paymentStatus: summary.paymentStatus,
-        payments: payments.map((p: any) => ({
+        payments: payments.map((p: StoredPayment) => ({
           amount: p.amount,
           method: p.method,
           notes: p.notes,
@@ -323,7 +324,7 @@ export function PaymentHistory({
           <p className="text-[10px] font-medium uppercase tracking-wider text-gray-500">
             Transacciones ({payments.length})
           </p>
-          {payments.map((payment: any) => (
+          {payments.map((payment: StoredPayment) => (
             <div
               key={payment.id}
               className={`flex items-center justify-between rounded-lg border px-4 py-3 group ${t.border} ${t.rowHover}`}

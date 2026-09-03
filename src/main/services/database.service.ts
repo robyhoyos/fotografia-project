@@ -10,17 +10,10 @@ import fs from 'fs'
 import path from 'path'
 import { app } from 'electron'
 import prisma from '../database/prisma'
+import { getDatabasePath } from '../database/paths'
 
 // Firma mágica de SQLite: los 16 primeros bytes de TODO archivo .db válido.
 const SQLITE_HEADER = Buffer.from('SQLite format 3\u0000')
-
-/**
- * @function getDatabasePath
- * @description Ruta absoluta del archivo de base de datos en uso.
- */
-export function getDatabasePath(): string {
-  return path.join(process.cwd(), 'prisma', 'dev.db')
-}
 
 /**
  * @function formatBytes

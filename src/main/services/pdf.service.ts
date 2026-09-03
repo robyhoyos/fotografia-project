@@ -12,7 +12,6 @@
 
 import PDFDocument from 'pdfkit'
 import fs from 'fs'
-import path from 'path'
 import { dialog, BrowserWindow } from 'electron'
 
 interface ReceiptData {

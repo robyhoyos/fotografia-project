@@ -409,3 +409,103 @@ export interface AlertsSummary {
   totalIncidents: number
   incidents: Incident[]
 }
+
+// ═══════════════════════════════════════════════════════════════
+// Tipos de respuesta del Renderer (IPC contract serializado)
+//
+// El renderer recibe los datos YA serializados por IPC (JSON):
+// las fechas llegan como ISO strings y los items como objetos planos.
+// Estos tipos describen exactamente lo que `window.api` devuelve.
+// ═══════════════════════════════════════════════════════════════
+
+/** Entidad Event tal como llega al renderer (con conteo de participantes). */
+export interface StoredEvent {
+  id: string
+  name: string
+  category: string
+  subtype: string
+  date: string
+  location: string | null
+  notes: string | null
+  coverPrice: number
+  status: string
+  createdAt: string
+  updatedAt: string
+  _count: { participants: number }
+}
+
+/** Respuesta de events:getAll. */
+export type ListEventsResponse = PaginatedResponse<StoredEvent>
+
+/** Entidad Event completa (con participantes) tal como llega al renderer. */
+export interface StoredEventDetail extends StoredEvent {
+  participants: ParticipantSummary[]
+}
+
+/** Participante tal como llega al renderer. */
+export type ParticipantItem = ParticipantSummary
+
+/** Respuesta de participant:GET_BY_EVENT. */
+export type ListParticipantsResponse = PaginatedResponse<ParticipantItem>
+
+/** Respuesta de participants:bulkUpdateStatus / bulkUpdatePayment. */
+export interface BulkUpdateResult {
+  updated: number
+}
+
+/** Respuesta de participants:bulkDelete. */
+export interface BulkDeleteResult {
+  deleted: number
+}
+
+/** Respuesta de participants:importCsv. */
+export interface ImportCsvResult {
+  imported: number
+  errors: string[]
+  total: number
+}
+
+/** Entidad Payment tal como llega al renderer. */
+export interface StoredPayment {
+  id: string
+  participantId: string
+  amount: number
+  method: string | null
+  notes: string | null
+  createdAt: string
+}
+
+/** Respuesta de payments:findByParticipant. */
+export interface ParticipantPayments {
+  payments: StoredPayment[]
+  summary: {
+    totalCost: number
+    paidAmount: number
+    outstanding: number
+    paymentStatus: string
+  }
+}
+
+/** Respuesta de database:getInfo. */
+export interface DatabaseInfo {
+  path: string
+  sizeBytes: number
+  eventCount: number
+  participantCount: number
+  paymentCount: number
+}
+
+/** Respuesta de settings:getAll. */
+export interface SettingRecordDTO {
+  key: string
+  value: string
+  category: string
+  label: string
+  description: string | null
+}
+
+/** Respuesta de export:xlsxParticipants. */
+export interface ExportXlsxResult {
+  path: string
+  count: number
+}

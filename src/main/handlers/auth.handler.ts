@@ -10,7 +10,7 @@
 import { ipcMain } from 'electron'
 import { z } from 'zod'
 import { IPC_CHANNELS } from '../../../shared/types/ipc'
-import type { ApiResponse } from '../../../shared/types/ipc'
+import type { ApiResponse, AuthUser, UserRecord } from '../../../shared/types/ipc'
 import { getAuthService } from '../auth/permissions'
 
 const channels = IPC_CHANNELS.AUTH
@@ -53,7 +53,7 @@ export function registerAuthHandlers(): void {
   // ─── Setup del admin inicial (primer arranque) ──────────────
   ipcMain.handle(
     channels.SETUP_ADMIN,
-    async (_event, payload): Promise<ApiResponse<any>> => {
+    async (_event, payload): Promise<ApiResponse<AuthUser>> => {
       try {
         const data = SetupAdminSchema.parse(payload)
         const user = await getAuthService().setupAdmin(data)
@@ -69,7 +69,7 @@ export function registerAuthHandlers(): void {
   )
 
   // ─── ¿Hay usuarios creados? ─────────────────────────────────
-  ipcMain.handle(channels.IS_SETUP, async (): Promise<ApiResponse<any>> => {
+  ipcMain.handle(channels.IS_SETUP, async (): Promise<ApiResponse<boolean>> => {
     try {
       const setup = await getAuthService().isSetup()
       return { success: true, data: setup }
@@ -81,7 +81,7 @@ export function registerAuthHandlers(): void {
   // ─── Login ──────────────────────────────────────────────────
   ipcMain.handle(
     channels.LOGIN,
-    async (_event, payload): Promise<ApiResponse<any>> => {
+    async (_event, payload): Promise<ApiResponse<AuthUser>> => {
       try {
         const data = LoginSchema.parse(payload)
         const user = await getAuthService().login(data.username, data.password)
@@ -93,7 +93,7 @@ export function registerAuthHandlers(): void {
   )
 
   // ─── Logout ─────────────────────────────────────────────────
-  ipcMain.handle(channels.LOGOUT, async (): Promise<ApiResponse<any>> => {
+  ipcMain.handle(channels.LOGOUT, async (): Promise<ApiResponse<null>> => {
     try {
       getAuthService().logout()
       return { success: true, message: 'Sesión cerrada' }
@@ -103,7 +103,7 @@ export function registerAuthHandlers(): void {
   })
 
   // ─── Usuario de la sesión activa ────────────────────────────
-  ipcMain.handle(channels.GET_CURRENT, async (): Promise<ApiResponse<any>> => {
+  ipcMain.handle(channels.GET_CURRENT, async (): Promise<ApiResponse<AuthUser | null>> => {
     try {
       const user = getAuthService().getCurrent()
       return { success: true, data: user }
@@ -115,7 +115,7 @@ export function registerAuthHandlers(): void {
   // ─── Cambiar la propia contraseña ───────────────────────────
   ipcMain.handle(
     channels.CHANGE_PASSWORD,
-    async (_event, payload): Promise<ApiResponse<any>> => {
+    async (_event, payload): Promise<ApiResponse<null>> => {
       try {
         const data = ChangePasswordSchema.parse(payload)
         await getAuthService().changePassword(data.currentPassword, data.newPassword)
@@ -129,7 +129,7 @@ export function registerAuthHandlers(): void {
   // ─── Crear usuario (solo ADMIN) ─────────────────────────────
   ipcMain.handle(
     channels.CREATE_USER,
-    async (_event, payload): Promise<ApiResponse<any>> => {
+    async (_event, payload): Promise<ApiResponse<AuthUser>> => {
       try {
         const data = CreateUserSchema.parse(payload)
         const user = await getAuthService().createUser(data)
@@ -141,7 +141,7 @@ export function registerAuthHandlers(): void {
   )
 
   // ─── Listar usuarios (solo ADMIN) ───────────────────────────
-  ipcMain.handle(channels.LIST_USERS, async (): Promise<ApiResponse<any>> => {
+  ipcMain.handle(channels.LIST_USERS, async (): Promise<ApiResponse<UserRecord[]>> => {
     try {
       const data = await getAuthService().listUsers()
       return { success: true, data }
@@ -153,7 +153,7 @@ export function registerAuthHandlers(): void {
   // ─── Activar/desactivar usuario (solo ADMIN) ────────────────
   ipcMain.handle(
     channels.TOGGLE_USER,
-    async (_event, payload): Promise<ApiResponse<any>> => {
+    async (_event, payload): Promise<ApiResponse<null>> => {
       try {
         const data = ToggleUserSchema.parse(payload)
         await getAuthService().toggleUser(data.userId, data.isActive)

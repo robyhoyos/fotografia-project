@@ -4,8 +4,6 @@
 
 import { ipcMain } from 'electron'
 import { EventService } from '../services/event.service'
-import { EventRepository } from '../repositories/event.repository'
-import prisma from '../database/prisma'
 import {
   CreateEventSchema,
   UpdateEventSchema,
@@ -13,6 +11,11 @@ import {
 } from '../../../shared/schemas/event.schema'
 import { IPC_CHANNELS } from '../../../shared/types/ipc'
 import type { ApiResponse, EventStats } from '../../../shared/types/ipc'
+import type {
+  RawEvent,
+  RawEventDetail,
+  RawListEvents,
+} from '../types/raw'
 import { requireAdmin } from '../auth/permissions'
 
 /**
@@ -49,7 +52,7 @@ export function registerEventHandlers(eventService: EventService): void {
    */
   ipcMain.handle(
     channels.GET_ALL,
-    async (_, payload): Promise<ApiResponse<any>> => {
+    async (_, payload): Promise<ApiResponse<RawListEvents>> => {
       try {
         const params = ListEventsSchema.parse(payload)
         const data = await eventService.getAll(params)
@@ -72,7 +75,7 @@ export function registerEventHandlers(eventService: EventService): void {
    */
   ipcMain.handle(
     channels.GET_BY_ID,
-    async (_, payload: { id: string }): Promise<ApiResponse<any>> => {
+    async (_, payload: { id: string }): Promise<ApiResponse<RawEventDetail | null>> => {
       try {
         const { id } = payload
         const data = await eventService.getById(id)
@@ -96,7 +99,7 @@ export function registerEventHandlers(eventService: EventService): void {
   ipcMain.handle(
     channels.CREATE,
     requireAdmin(
-      async (_, payload): Promise<ApiResponse<any>> => {
+      async (_, payload): Promise<ApiResponse<RawEvent>> => {
         try {
           const data = CreateEventSchema.parse(payload)
           const event = await eventService.create(data)
@@ -121,7 +124,7 @@ export function registerEventHandlers(eventService: EventService): void {
   ipcMain.handle(
     channels.UPDATE,
     requireAdmin(
-      async (_, payload): Promise<ApiResponse<any>> => {
+      async (_, payload): Promise<ApiResponse<RawEvent>> => {
         try {
           const data = UpdateEventSchema.parse(payload)
           const event = await eventService.update(data)
@@ -146,7 +149,7 @@ export function registerEventHandlers(eventService: EventService): void {
   ipcMain.handle(
     channels.DELETE,
     requireAdmin(
-      async (_, payload: { id: string }): Promise<ApiResponse<any>> => {
+      async (_, payload: { id: string }): Promise<ApiResponse<null>> => {
         try {
           await eventService.delete(payload.id)
           return { success: true, message: 'Evento eliminado' }
@@ -169,7 +172,7 @@ export function registerEventHandlers(eventService: EventService): void {
    */
   ipcMain.handle(
     channels.GET_STATS,
-    async (_, payload: { eventId: string }): Promise<ApiResponse<any>> => {
+    async (_, payload: { eventId: string }): Promise<ApiResponse<EventStats>> => {
       try {
         const stats = await eventService.getStats(payload.eventId)
         return { success: true, data: stats }

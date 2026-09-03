@@ -2,7 +2,7 @@
 // Repository para operaciones de pagos individuales (ledger).
 // Cada transacción de pago se registra aquí como un registro independiente.
 
-import { PrismaClient, Prisma } from '@prisma/client'
+import { PrismaClient, PaymentStatus } from '@prisma/client'
 
 export interface CreatePaymentInput {
   participantId: string
@@ -60,7 +60,7 @@ export class PaymentRepository {
         where: { id: input.participantId },
         data: {
           paidAmount: newPaidAmount,
-          paymentStatus: newPaymentStatus as any,
+          paymentStatus: newPaymentStatus as PaymentStatus,
         },
       })
 
@@ -153,7 +153,7 @@ export class PaymentRepository {
         where: { id: payment.participantId },
         data: {
           paidAmount: newPaidAmount,
-          paymentStatus: newPaymentStatus as any,
+          paymentStatus: newPaymentStatus as PaymentStatus,
         },
       })
     })
@@ -187,7 +187,7 @@ function getParticipantTotalCost(participant: {
   const items = participant.items
   if (Array.isArray(items)) {
     const itemsTotal = items.reduce(
-      (sum, item: any) => sum + (Number(item?.subtotal ?? 0) || 0),
+      (sum, item) => sum + (Number((item as { subtotal?: unknown })?.subtotal ?? 0) || 0),
       0
     )
     if (itemsTotal > 0) return itemsTotal

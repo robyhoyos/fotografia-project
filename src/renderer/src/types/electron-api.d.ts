@@ -3,7 +3,43 @@
 // El preload expone esta API vía contextBridge; este archivo la define
 // para que TypeScript conozca su forma sin importar electron.
 
-import type { ApiResponse, EventWithParticipants, EventStats, DashboardStats, AlertsSummary, ReceivableItem, Incident, CustomerSummary, AuthUser, UserRecord } from '../../../../shared/types/ipc'
+import type {
+  ApiResponse,
+  EventWithParticipants,
+  EventStats,
+  DashboardStats,
+  AlertsSummary,
+  ReceivableItem,
+  Incident,
+  IncidentInput,
+  CustomerSummary,
+  AuthUser,
+  UserRecord,
+  ListEventsResponse,
+  ListParticipantsResponse,
+  ParticipantItem,
+  BulkUpdateResult,
+  BulkDeleteResult,
+  ImportCsvResult,
+  ParticipantPayments,
+  StoredEvent,
+  StoredPayment,
+  ExportXlsxResult,
+} from '../../../../shared/types/ipc'
+import type {
+  CreateEventInput,
+  UpdateEventInput,
+  ListEventsInput,
+} from '../../../../shared/schemas/event.schema'
+import type {
+  CreateParticipantInput,
+  UpdateParticipantInput,
+  ListParticipantsInput,
+  BulkUpdateStatusInput,
+  BulkUpdatePaymentInput,
+  BulkDeleteInput,
+  ImportCsvInput,
+} from '../../../../shared/schemas/participant.schema'
 
 declare global {
   interface Window {
@@ -20,53 +56,53 @@ declare global {
         toggleUser: (payload: { userId: string; isActive: boolean }) => Promise<ApiResponse<null>>
       }
       events: {
-        getAll: (payload: any) => Promise<ApiResponse<any>>
+        getAll: (payload: ListEventsInput) => Promise<ApiResponse<ListEventsResponse>>
         getById: (payload: { id: string }) => Promise<ApiResponse<EventWithParticipants | null>>
-        create: (payload: any) => Promise<ApiResponse<any>>
-        update: (payload: any) => Promise<ApiResponse<any>>
+        create: (payload: CreateEventInput) => Promise<ApiResponse<StoredEvent>>
+        update: (payload: UpdateEventInput) => Promise<ApiResponse<StoredEvent>>
         delete: (payload: { id: string }) => Promise<ApiResponse<null>>
         getStats: (payload: { eventId: string }) => Promise<ApiResponse<EventStats>>
       }
       participants: {
-        getByEvent: (payload: any) => Promise<ApiResponse<any>>
-        getById: (payload: { id: string }) => Promise<ApiResponse<any>>
-        getByBarcode: (payload: { barcode: string }) => Promise<ApiResponse<any>>
-        create: (payload: any) => Promise<ApiResponse<any>>
-        update: (payload: any) => Promise<ApiResponse<any>>
+        getByEvent: (payload: ListParticipantsInput) => Promise<ApiResponse<ListParticipantsResponse>>
+        getById: (payload: { id: string }) => Promise<ApiResponse<ParticipantItem & { event?: { id: string; name: string; date: string; location: string | null; coverPrice: number } | null } | null>>
+        getByBarcode: (payload: { barcode: string }) => Promise<ApiResponse<ParticipantItem & { event?: { id: string; name: string; date: string; location: string | null; coverPrice: number } | null } | null>>
+        create: (payload: CreateParticipantInput) => Promise<ApiResponse<ParticipantItem>>
+        update: (payload: UpdateParticipantInput) => Promise<ApiResponse<ParticipantItem>>
         delete: (payload: { id: string }) => Promise<ApiResponse<null>>
-        bulkUpdateStatus: (payload: any) => Promise<ApiResponse<any>>
-        bulkUpdatePayment: (payload: any) => Promise<ApiResponse<any>>
-        bulkDelete: (payload: any) => Promise<ApiResponse<any>>
-        importCsv: (payload: any) => Promise<ApiResponse<any>>
+        bulkUpdateStatus: (payload: BulkUpdateStatusInput) => Promise<ApiResponse<BulkUpdateResult>>
+        bulkUpdatePayment: (payload: BulkUpdatePaymentInput) => Promise<ApiResponse<BulkUpdateResult>>
+        bulkDelete: (payload: BulkDeleteInput) => Promise<ApiResponse<BulkDeleteResult>>
+        importCsv: (payload: ImportCsvInput) => Promise<ApiResponse<ImportCsvResult>>
       }
       customers: {
         list: () => Promise<ApiResponse<CustomerSummary[]>>
-        setRating: (payload: { cedula: string; rating: number | null }) => Promise<ApiResponse<{ updated: number }>>
+        setRating: (payload: { cedula: string; rating: number | null }) => Promise<ApiResponse<number>>
       }
       database: {
-        backup: () => Promise<ApiResponse<any>>
-        restore: () => Promise<ApiResponse<any>>
-        getInfo: () => Promise<ApiResponse<any>>
+        backup: () => Promise<ApiResponse<{ path: string; size: string; lastBackupAt: string }>>
+        restore: () => Promise<ApiResponse<{ size: string; safetyBackup: string }>>
+        getInfo: () => Promise<ApiResponse<{ path: string; exists: boolean; size: string; sizeBytes: number; eventCount: number; participantCount: number; lastBackupAt: string | null }>>
       }
       payments: {
-        create: (payload: any) => Promise<ApiResponse<any>>
-        findByParticipant: (payload: { participantId: string }) => Promise<ApiResponse<any>>
-        delete: (payload: { id: string }) => Promise<ApiResponse<any>>
+        create: (payload: { participantId: string; amount: number; method?: string | null; notes?: string | null }) => Promise<ApiResponse<StoredPayment>>
+        findByParticipant: (payload: { participantId: string }) => Promise<ApiResponse<ParticipantPayments>>
+        delete: (payload: { id: string }) => Promise<ApiResponse<{ deleted: boolean }>>
       }
       pdf: {
-        generateReceipt: (payload: any) => Promise<ApiResponse<any>>
+        generateReceipt: (payload: Record<string, unknown>) => Promise<ApiResponse<{ path: string }>>
       }
       export: {
-        xlsxParticipants: (payload: { eventId: string }) => Promise<ApiResponse<any>>
+        xlsxParticipants: (payload: { eventId: string }) => Promise<ApiResponse<ExportXlsxResult>>
       }
       settings: {
-        getAll: () => Promise<ApiResponse<any>>
-        get: (key: string) => Promise<ApiResponse<any>>
-        getMany: (keys: string[]) => Promise<ApiResponse<any>>
-        set: (key: string, value: string) => Promise<ApiResponse<any>>
-        setMany: (items: Array<{ key: string; value: string }>) => Promise<ApiResponse<any>>
-        resetCategory: (category: string) => Promise<ApiResponse<any>>
-        resetAll: () => Promise<ApiResponse<any>>
+        getAll: () => Promise<ApiResponse<Record<string, Array<{ key: string; value: string; category: string; label: string; description: string | null }>>>>
+        get: (key: string) => Promise<ApiResponse<string | null>>
+        getMany: (keys: string[]) => Promise<ApiResponse<Record<string, string>>>
+        set: (key: string, value: string) => Promise<ApiResponse<null>>
+        setMany: (items: Array<{ key: string; value: string }>) => Promise<ApiResponse<null>>
+        resetCategory: (category: string) => Promise<ApiResponse<null>>
+        resetAll: () => Promise<ApiResponse<null>>
       }
       dashboard: {
         getStats: (params?: {
@@ -77,10 +113,10 @@ declare global {
       }
       alerts: {
         getSummary: () => Promise<ApiResponse<AlertsSummary>>
-        createIncident: (payload: any) => Promise<ApiResponse<Incident>>
-        updateIncident: (id: string, payload: any) => Promise<ApiResponse<Incident>>
+        createIncident: (payload: IncidentInput) => Promise<ApiResponse<Incident>>
+        updateIncident: (id: string, payload: IncidentInput) => Promise<ApiResponse<Incident>>
         deleteIncident: (id: string) => Promise<ApiResponse<boolean>>
-        getUpcomingEvents: () => Promise<ApiResponse<any>>
+        getUpcomingEvents: () => Promise<ApiResponse<AlertsSummary['upcomingEvents']>>
         getReceivables: () => Promise<ApiResponse<ReceivableItem[]>>
       }
       dialog: {

@@ -164,6 +164,10 @@ export function ParticipantTable({
               return (
                 <tr
                   key={participant.id}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`Abrir detalle del participante ${participant.name}`}
+                  aria-selected={isSelected}
                   className={`group cursor-pointer transition-colors ${
                     isSelected
                       ? theme === 'dark'
@@ -174,6 +178,12 @@ export function ParticipantTable({
                   onClick={() =>
                     openDrawer('participant-detail', participant)
                   }
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      openDrawer('participant-detail', participant)
+                    }
+                  }}
                 >
                   {!readOnly && (
                     <td className="w-12 px-4 py-3">
