@@ -123,7 +123,7 @@ export class EventService {
       throw new Error('Evento no encontrado')
     }
 
-    // Regla de negocio: no eliminar si ya se entregaron fotos
+    // Regla de negocio: no se puede eliminar un evento con participantes en estado ENTREGADO
     const hasDelivered = existing.participants.some(
       (p) => p.status === 'ENTREGADO'
     )

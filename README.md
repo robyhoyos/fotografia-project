@@ -1,10 +1,12 @@
 # Fotografia App
 
-Aplicación de escritorio para la gestión de eventos fotográficos y sus participantes.
+Aplicación de escritorio para la gestión del ciclo comercial de fotógrafos independientes.
 
 ## Descripción
 
-Sistema diseñado para fotógrafos independientes que manejan eventos como comuniones, bodas, bautizos, retratos escolares y sesiones de estudio. Permite gestionar cientos de participantes por evento con seguimiento de entregas y pagos.
+FotoVic permite gestionar el ciclo comercial completo: crear evento → registrar participantes → registrar pagos → controlar entregas → exportar / imprimir recibos. Está diseñada para fotógrafos independientes que manejan eventos como comuniones, bodas, bautizos, retratos escolares y sesiones de estudio, permitiendo gestionar cientos de participantes por evento con seguimiento de entregas y pagos.
+
+> **Nota sobre el alcance:** la aplicación no almacena ni gestiona fotografías digitales ni archivos multimedia. El término "entrega" se refiere al control de la **entrega física de las fotografías impresas** de cada participante (estado PENDIENTE / EN_PROCESO / ENTREGADO).
 
 ## Stack Tecnológico
 
@@ -25,11 +27,11 @@ Sistema diseñado para fotógrafos independientes que manejan eventos como comun
 # Instalar dependencias
 npm install
 
-# Generar Prisma Client
-npx prisma generate
+# Generar Prisma Client (usar el script definido en package.json)
+npm run prisma:generate
 
-# Ejecutar migraciones
-npx prisma migrate dev
+# Ejecutar migraciones pendientes (usar el script definido en package.json)
+npm run prisma:migrate
 
 # Iniciar en modo desarrollo
 npm run dev
@@ -39,11 +41,14 @@ npm run dev
 
 | Script | Descripción |
 |--------|-------------|
-| `npm run dev` | Inicia Vite + Electron en modo desarrollo |
+| `npm run dev` | Genera Prisma Client e inicia Vite + Electron en modo desarrollo |
 | `npm run build` | Build de producción (renderer + main + preload) |
-| `npm run start` | Build completo y lanza la app |
-| `npm run prisma:studio` | Abre Prisma Studio para inspeccionar la DB |
+| `npm run start` | Genera Prisma Client, build completo y lanza la app |
+| `npm run lint` | Ejecuta ESLint |
+| `npm run typecheck` | Verificación de tipos sobre los 3 tsconfigs |
+| `npm run prisma:generate` | Genera Prisma Client |
 | `npm run prisma:migrate` | Ejecuta migraciones pendientes |
+| `npm run prisma:studio` | Abre Prisma Studio para inspeccionar la DB |
 
 ## Arquitectura
 
@@ -92,7 +97,7 @@ shared/                      # Código compartido (Main + Renderer)
 - No se pueden crear eventos con fecha en el pasado (excepto ESTUDIO)
 - No se pueden modificar eventos cancelados
 - No se pueden eliminar eventos con participantes entregados
-- No se puede marcar un participante como ENTREGADO sin 50% de pago mínimo
+- No se puede marcar un participante como ENTREGADO sin alcanzar el porcentaje mínimo de pago configurable (`delivery_payment_threshold`, por defecto 50% sobre el total adeudado)
 - No se puede reactivar un participante cancelado
 - Máximo 500 participantes por operación masiva
 - Máximo 1000 registros por importación CSV

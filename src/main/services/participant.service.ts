@@ -154,13 +154,13 @@ export class ParticipantService {
   /**
    * @method bulkUpdateStatus
    * @description Cambio masivo de estado de entrega (HU-D6).
-   * Aplica la regla de 50% mínimo de pago a cada participante.
+   * Aplica la regla del umbral mínimo de pago configurable (delivery_payment_threshold) a cada participante.
    *
    * @param {BulkUpdateStatusInput} input - IDs + nuevo estado
    * @returns Resumen de la operación
    */
   async bulkUpdateStatus(input: BulkUpdateStatusInput) {
-    // Validar que todos los participantes cumplan la regla de pago
+    // Validar que todos los participantes cumplan el umbral mínimo de pago configurado
     if (input.status === 'ENTREGADO') {
       const threshold = await this.getDeliveryThreshold()
       for (const id of input.participantIds) {
