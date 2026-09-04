@@ -82,7 +82,7 @@ No hay roles múltiples ni multiusuario: es una herramienta local de un solo fot
 ### 5.4 Entregar
 1. El fotógrafo puede usar el **escáner de código de barras** (por evento) para buscar al participante y marcarlo como entregado.
 2. También puede cambiar el estado manualmente (individual o **masivo**).
-3. Regla crítica de negocio: **no se entrega sin un mínimo del 50% pagado** (ver §6).
+3. Regla crítica de negocio: **no se entrega sin haber pagado al menos el porcentaje mínimo configurado** (`delivery_payment_threshold`, por defecto 50%, ver §6).
 
 ### 5.5 Cierre y operaciones del día
 - Exportar participantes del evento a **CSV** (compatible con Excel).
@@ -100,7 +100,7 @@ No hay roles múltiples ni multiusuario: es una herramienta local de un solo fot
 | R2 | No se pueden **modificar** eventos en estado `CANCELADO`. | `EventService.update()` |
 | R3 | No se puede **eliminar** un evento que tenga participantes `ENTREGADO` (primero se cancela). | `EventService.delete()` |
 | R4 | No se puede **agregar un participante** a un evento que **no existe** o está `CANCELADO`. | `ParticipantService.create()` |
-| R5 | Para marcar un participante `ENTREGADO` debe haber pagado al menos el **50%** del total (`precio × cantidad`). | `ParticipantService.update()` y `bulkUpdateStatus()` |
+| R5 | Para marcar un participante `ENTREGADO` debe haber pagado al menos el **porcentaje mínimo configurable** (`delivery_payment_threshold`, por defecto 50%) sobre el total adeudado. | `ParticipantService.update()` y `bulkUpdateStatus()` |
 | R6 | Un participante `CANCELADO` **no** puede volver a `EN_PROCESO` (no se reactiva). | `ParticipantService.update()` |
 | R7 | Acciones masivas limitadas a **máximo 500 participantes** por operación. | Schemas Bulk |
 | R8 | Importación CSV limitada a **máximo 1000 registros** por archivo. | `ImportCsvSchema` |
@@ -120,7 +120,7 @@ PENDIENTE ──► EN_PROCESO ──► ENTREGADO
    │               └── (prohibido si CANCELADO)
    └────────────► CANCELADO (sin retorno a EN_PROCESO)
 ```
-- `ENTREGADO` requiere **R5** (≥50% pagado).
+- `ENTREGADO` requiere **R5** (alcanzar el umbral configurable de pago mínimo, por defecto 50% del total adeudado).
 
 ### 7.2 Estado de pago (`Participant.paymentStatus`)
 ```

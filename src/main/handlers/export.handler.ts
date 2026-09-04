@@ -16,6 +16,7 @@
 
 import path from 'path'
 import { ipcMain, dialog, BrowserWindow } from 'electron'
+import { z } from 'zod'
 import { Workbook, type Cell, type Fill, type Border } from 'exceljs'
 import { IPC_CHANNELS } from '../../../shared/types/ipc'
 import prisma from '../database/prisma'
@@ -23,6 +24,11 @@ import type { SettingsService } from '../services/settings.service'
 import { requireAdmin } from '../auth/permissions'
 
 const channels = IPC_CHANNELS.EXPORT
+
+// ─── Schemas de validación ──────────────────────────────────────────
+const ExportParticipantsSchema = z.object({
+  eventId: z.string().cuid('ID de evento inválido'),
+})
 
 // ─── Paleta de formato ──────────────────────────────────────────────
 const DARK_BG = 'FF0F172A' // Banner de marca (tinta casi negra)
@@ -78,14 +84,14 @@ function moneyDisplay(value: number): string {
  */
 export function registerExportHandlers(settingsService: SettingsService) {
   // ─── Exportar participantes a Excel (.xlsx) ──────────────────────
-  ipcMain.handle(channels.XLSX_PARTICIPANTS, requireAdmin(async (event, payload: { eventId: string }) => {
+  ipcMain.handle(channels.XLSX_PARTICIPANTS, requireAdmin(async (event, payload: unknown) => {
     try {
       const win = BrowserWindow.fromWebContents(event.sender)
       if (!win) {
         return { success: false, error: 'No se encontró la ventana principal' }
       }
 
-      const { eventId } = payload
+      const { eventId } = ExportParticipantsSchema.parse(payload)
 
       const eventRecord = await prisma.event.findUnique({
         where: { id: eventId },
@@ -264,7 +270,7 @@ export function registerExportHandlers(settingsService: SettingsService) {
 
         columns.forEach((col, colIdx) => {
           const raw = row[col.key]
-          const value = typeof raw === 'string' ? raw : raw
+          const value = raw
           const cell = excelRow.getCell(colIdx + 1)
 
           if (col.currency) {

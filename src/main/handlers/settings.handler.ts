@@ -2,11 +2,19 @@
 // Handler IPC para configuraciones de la aplicación.
 
 import { ipcMain } from 'electron'
+import { z } from 'zod'
 import { IPC_CHANNELS } from '../../../shared/types/ipc'
 import { SettingsService } from '../services/settings.service'
 import { requireAdmin } from '../auth/permissions'
 
 const channels = IPC_CHANNELS.SETTINGS
+
+// ─── Schemas de validación ──────────────────────────────────────────
+const KeySchema = z.string().trim().min(1, 'La clave no puede estar vacía').max(100)
+const ValueSchema = z.string().max(5000, 'El valor es demasiado largo')
+const SettingItemSchema = z.object({ key: KeySchema, value: ValueSchema })
+const SettingsItemsSchema = z.array(SettingItemSchema).min(1, 'Debes enviar al menos una configuración')
+const CategorySchema = z.enum(['negocio', 'eventos', 'entregas'])
 
 /**
  * @function registerSettingsHandlers
@@ -46,9 +54,10 @@ export function registerSettingsHandlers(service: SettingsService) {
   // ─── Actualizar una configuración ────────────────────────
   ipcMain.handle(
     channels.SET,
-    requireAdmin(async (_event, key: string, value: string) => {
+    requireAdmin(async (_event, key: unknown, value: unknown) => {
       try {
-        await service.set(key, value)
+        const input = z.tuple([KeySchema, ValueSchema]).parse([key, value])
+        await service.set(input[0], input[1])
         return { success: true }
       } catch (err) {
         return { success: false, error: (err as Error).message }
@@ -59,9 +68,10 @@ export function registerSettingsHandlers(service: SettingsService) {
   // ─── Actualizar múltiples configuraciones ────────────────
   ipcMain.handle(
     channels.SET_MANY,
-    requireAdmin(async (_event, items: Array<{ key: string; value: string }>) => {
+    requireAdmin(async (_event, items: unknown) => {
       try {
-        await service.setMany(items)
+        const parsed = SettingsItemsSchema.parse(items)
+        await service.setMany(parsed)
         return { success: true }
       } catch (err) {
         return { success: false, error: (err as Error).message }
@@ -72,9 +82,10 @@ export function registerSettingsHandlers(service: SettingsService) {
   // ─── Restaurar categoría ─────────────────────────────────
   ipcMain.handle(
     channels.RESET_CATEGORY,
-    requireAdmin(async (_event, category: string) => {
+    requireAdmin(async (_event, category: unknown) => {
       try {
-        await service.resetCategory(category)
+        const parsed = CategorySchema.parse(category)
+        await service.resetCategory(parsed)
         return { success: true }
       } catch (err) {
         return { success: false, error: (err as Error).message }

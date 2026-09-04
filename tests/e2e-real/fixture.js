@@ -31,7 +31,14 @@ async function launchApp() {
   return electron.launch({
     args: ['.'],
     cwd: ROOT,
-    env: { ...process.env, DATABASE_URL: TEST_DB_URL, PRISMA_HIDE_UPDATE_MESSAGE: 'true' },
+    // E2E_TEST=1 indica al Main process que NO abra DevTools automáticamente.
+    // En modo dev el main abre DevTools en ventana aparte, cuya ventana y
+    // diálogo "DevTools is now available in Spanish!" roban el foco y vuelven
+    // los tests flaky al operar sobre el modal/detalle del participante.
+    env: { ...process.env, DATABASE_URL: TEST_DB_URL, PRISMA_HIDE_UPDATE_MESSAGE: 'true', E2E_TEST: '1' },
+    // Desactivar la flag de actualizaciones de Chromium que muestra el diálogo
+    // de bienvenida de DevTools (evita interferencias con el foco de la ventana).
+    ignoreDefaultArgs: ['--disable-extensions'],
   });
 }
 

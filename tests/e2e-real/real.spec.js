@@ -164,7 +164,7 @@ test('registrar un abono desde el detalle persiste en la base de datos real', as
     phone: '3209876543',
   });
 
-  await page.getByRole('row', { name: /María López/ }).click();
+  await page.getByText('María López', { exact: true }).first().click();
   await expect(page.getByText('Detalle del Participante')).toBeVisible();
 
   await page.getByPlaceholder('Monto del abono (COP)').fill('50000');
@@ -202,7 +202,7 @@ test('se rechaza marcar ENTREGADO sin el pago mínimo (regla de negocio en BD re
     phone: '3101112222',
   });
 
-  await page.getByRole('row', { name: /Luis Pardo/ }).click();
+  await page.getByText('Luis Pardo', { exact: true }).first().click();
   await expect(page.getByText('Detalle del Participante')).toBeVisible();
 
   await page.getByRole('button', { name: 'ENTREGADO', exact: true }).click();
@@ -232,7 +232,7 @@ test('marcar ENTREGADO con pago total persiste en la base de datos real', async 
     payment: 'PAGO_TOTAL',
   });
 
-  await page.getByRole('row', { name: /Ana Pérez/ }).locator('input[type="checkbox"]').check();
+  await page.locator('tr').filter({ hasText: 'Ana Pérez' }).locator('input[type="checkbox"]').check();
   await page.getByRole('button', { name: 'Marcar Entregado' }).click();
   await expect(page.getByText('Estado actualizado', { exact: false })).toBeVisible();
 
@@ -366,7 +366,7 @@ test('cambiar el estado del evento a Finalizado persiste en BD real (HU-B2)', as
 
   await page.getByRole('button', { name: 'Finalizado' }).click();
   await expect(page.getByText('Cambiar a finalizado', { exact: false })).toBeVisible();
-  await page.getByRole('button', { name: 'Eliminar' }).click();
+  await page.getByRole('button', { name: 'Cambiar' }).click();
   await expect(page.getByText('Estado actualizado', { exact: false })).toBeVisible();
 
   const prisma = await testDb();
