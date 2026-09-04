@@ -2,11 +2,29 @@
 // Handler IPC para el módulo de Alertas (incidencias + eventos próximos + recibos).
 
 import { ipcMain } from 'electron'
+import { z } from 'zod'
 import { IPC_CHANNELS } from '../../../shared/types/ipc'
 import type { IncidentService } from '../services/incident.service'
 import { requireAdmin } from '../auth/permissions'
 
 const channels = IPC_CHANNELS.ALERTS
+
+// ─── Schemas de validación ──────────────────────────────────────────
+// Alineados con IncidentInput: todos los campos son OPCIONALES para soportar
+// tanto la creación con valores por defecto como la actualización parcial.
+
+const IncidentTypeSchema = z.enum(['EQUIPO_DANADO', 'ACCESORIO_POR_COMPRAR', 'PENDIENTE'])
+const IncidentStatusSchema = z.enum(['ABIERTA', 'RESUELTA'])
+
+const IncidentInputSchema = z.object({
+  id: z.string().optional(),
+  title: z.string().trim().min(1, 'El título no puede estar vacío').max(200).optional(),
+  description: z.string().max(2000).nullable().optional(),
+  type: IncidentTypeSchema.optional(),
+  status: IncidentStatusSchema.optional(),
+  eventId: z.string().cuid('ID de evento inválido').nullable().optional(),
+  dueDate: z.string().datetime().nullable().optional(),
+})
 
 /**
  * @function registerIncidentHandlers
@@ -26,7 +44,8 @@ export function registerIncidentHandlers(service: IncidentService) {
   // ─── Crear incidencia ────────────────────────────────────
   ipcMain.handle(channels.CREATE_INCIDENT, requireAdmin(async (_event, payload?: unknown) => {
     try {
-      const data = await service.createIncident((payload ?? {}) as never)
+      const input = IncidentInputSchema.parse(payload ?? {})
+      const data = await service.createIncident(input)
       return { success: true, data }
     } catch (err) {
       return { success: false, error: (err as Error).message }
@@ -38,7 +57,8 @@ export function registerIncidentHandlers(service: IncidentService) {
     channels.UPDATE_INCIDENT,
     requireAdmin(async (_event, id: string, payload?: unknown) => {
       try {
-        const data = await service.updateIncident(id, (payload ?? {}) as never)
+        const input = IncidentInputSchema.parse(payload ?? {})
+        const data = await service.updateIncident(id, input)
         return { success: true, data }
       } catch (err) {
         return { success: false, error: (err as Error).message }
