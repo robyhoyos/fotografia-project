@@ -60,11 +60,22 @@ electronDownload:
 # se incluyen tal cual. Evita pasos extra al empaquetar.
 npmRebuild: false
 
-# Los binarios de Prisma se incluyen descomprimidos (redundante con asar:false,
-# pero explícito y a prueba de futuros cambios).
+# Cliente Prisma generado (node_modules/.prisma/client) + query-engine nativo.
+# IMPORTANTE: se copia a `app/node_modules/.prisma/client` y NO a resources/prisma
+# porque `@prisma/client/default.js` del paquete hace `require('.prisma/client/default')`,
+# que Node resuelve relativo a `resources/app/node_modules`. Si se colocara fuera del
+# node_modules de la app, el require fallaría con "Cannot find module '.prisma/client/default'".
+# (electron-builder NO incluye carpetas ocultas como `.prisma` vía el glob de `files`,
+# por eso se hace explícito aquí con extraResources → app/...)
 extraResources:
   - from: node_modules/.prisma/client
-    to: prisma/client
+    to: app/node_modules/.prisma/client
+  # Schema y migraciones de Prisma para aplicar `migrate deploy` al arrancar en
+  # producción (FASE 2). Se colocan en resources/prisma/ para acompañar al esquema.
+  - from: prisma/schema.prisma
+    to: prisma/schema.prisma
+  - from: prisma/migrations
+    to: prisma/migrations
 
 # Empaquetar solo la plataforma actual (Windows x64).
 # Para producción multiplataforma habría que ajustar aquí.
