@@ -9,6 +9,7 @@ import { isPackaged } from './database/paths'
 // El bootstrap DEBE importarse antes de ./database/prisma para que DATABASE_URL
 // esté definido (ruta escribible en producción) cuando se construya PrismaClient.
 import './database/bootstrap'
+import { applyMigrations } from './database/migrate'
 import prisma from './database/prisma'
 import { EventRepository } from './repositories/event.repository'
 import { ParticipantRepository } from './repositories/participant.repository'
@@ -80,6 +81,8 @@ function loadDevRenderer(win: BrowserWindow): void {
  * - nodeIntegration: false → El Renderer NO tiene acceso a Node.js APIs
  * - contextIsolation: true → El contexto del Renderer está aislado
  * - webSecurity: true → Habilita same-origin policy
+ * - sandbox: true → El proceso de renderer corre en sandbox (defensa en profundidad)
+ * - webviewTag: false → Deshabilita el embed de <webview> (vector de ataque innecesario)
  * - preload script → Único puente de comunicación con el Main process
  */
 function createWindow(): void {
@@ -94,6 +97,8 @@ function createWindow(): void {
       nodeIntegration: false,       // SEGURIDAD: Sin acceso a Node en Renderer
       contextIsolation: true,       // SEGURIDAD: Aislamiento de contexto
       webSecurity: true,
+      sandbox: true,                // SEGURIDAD: Renderer en sandbox (defensa en profundidad)
+      webviewTag: false,            // SEGURIDAD: No permitir <webview>
     },
     titleBarStyle: 'hiddenInset',
     backgroundColor: '#121212',
@@ -104,8 +109,12 @@ function createWindow(): void {
   // app.isPackaged es true solo cuando la app está empaquetada con electron-builder
   if (!app.isPackaged) {
     loadDevRenderer(mainWindow)
-    // Abrir DevTools en ventana separada (no compite con el drawer de la app)
-    mainWindow.webContents.openDevTools({ mode: 'detach' })
+    // Abrir DevTools en ventana separada (no compite con el drawer de la app).
+    // Se omite bajo E2E_TEST=1 (tests e2e reales): su ventana y el diálogo de
+    // bienvenida roban el foco y vuelven los tests flaky.
+    if (process.env.E2E_TEST !== '1') {
+      mainWindow.webContents.openDevTools({ mode: 'detach' })
+    }
   } else {
     mainWindow.loadFile(
       path.join(__dirname, '../../../renderer/index.html')
@@ -201,6 +210,10 @@ async function initializeServices(): Promise<void> {
 // ─── Lifecycle de la aplicación ──────────────────────────────────────
 
 app.whenReady().then(async () => {
+  // En producción, aplicar migraciones pendientes (crea la BD en instalaciones
+  // nuevas y actualiza el esquema en versiones previas sin perder datos).
+  await applyMigrations()
+
   // Conectar a Prisma/SQLite
   await prisma.$connect()
   console.info('[Main] Conectado a SQLite via Prisma')

@@ -23,8 +23,15 @@ ensureDatabaseDir()
 // Convertimos la ruta absoluta del SO a barras hacia delante y la prefijamos con
 // "file:". En Windows:  "C:\...\prisma\dev.db"  ->  "file:C:/.../prisma/dev.db".
 // En POSIX:            "/users/.../dev.db"     ->  "file:/users/.../dev.db".
+//
+// SOLO sobreescribimos DATABASE_URL si NO viene definida en el entorno. Esto
+// permite que las pruebas e2e reales (tests/e2e-real) pasen su propia
+// DATABASE_URL apuntando a prisma/test-e2e.db y prueben contra una BD aislada,
+// sin pisarla con la ruta por defecto de producción.
 const absolutePath = getDatabasePath().replace(/\\/g, '/')
-process.env.DATABASE_URL = `file:${absolutePath}`
+if (!process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = `file:${absolutePath}`
+}
 
 // Loguear (solo empaquetado) la ubicación real de la BD para diagnóstico.
 if (isPackaged()) {
