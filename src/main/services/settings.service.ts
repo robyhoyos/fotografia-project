@@ -2,7 +2,11 @@
 // Service para configuraciones de la aplicación.
 // Maneja la lógica de negocio y defaults de configuración.
 
+import { nativeImage } from 'electron'
 import { SettingsRepository, SettingRecord } from '../repositories/settings.repository'
+
+/** Clave de configuración donde se guarda el logo del negocio (base64 PNG). */
+const LOGO_KEY = 'business_logo'
 
 /** Valores por defecto de la aplicación */
 export const DEFAULT_SETTINGS: Array<{
@@ -274,8 +278,79 @@ export class SettingsService {
 
   /**
    * @description Restaura todas las configuraciones a sus valores por defecto.
+   * Nota: el logo del negocio (business_logo) NO se restaura, para no perder la marca del usuario.
    */
   async resetAll(): Promise<void> {
-    await this.repository.upsertMany(DEFAULT_SETTINGS)
+    await this.repository.upsertMany(
+      DEFAULT_SETTINGS.filter((s) => s.key !== LOGO_KEY)
+    )
+  }
+
+  /**
+   * @description Guarda el logo del negocio.
+   * Acepta tanto una data URL (`data:image/png;base64,...`) como base64 plano.
+   * Valida que sea una imagen decodificable, la normaliza a PNG y la limita a
+   * 512px en su dimensión mayor para mantener el tamaño del archivo contenido.
+   */
+  async setLogo(dataUrl: string): Promise<void> {
+    const raw = dataUrl?.trim()
+    if (!raw) {
+      throw new Error('El logo es obligatorio')
+    }
+
+    const match = /^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/s.exec(raw)
+    const b64 = match ? match[2] : raw
+
+    if (!b64 || b64.length < 20) {
+      throw new Error('El archivo seleccionado no parece una imagen válida')
+    }
+    if (b64.length > 2_500_000) {
+      throw new Error('El logo es demasiado grande (máximo ~1.8 MB)')
+    }
+
+    const decoded = Buffer.from(b64, 'base64')
+    const image = nativeImage.createFromBuffer(decoded)
+    if (image.isEmpty()) {
+      throw new Error('El archivo seleccionado no es una imagen válida')
+    }
+
+    let final = image
+    const { width, height } = image.getSize()
+    const maxDim = Math.max(width, height)
+    if (maxDim > 512) {
+      const scale = 512 / maxDim
+      final = image.resize({
+        width: Math.max(1, Math.round(width * scale)),
+        height: Math.max(1, Math.round(height * scale)),
+        quality: 'good',
+      })
+    }
+
+    const pngBase64 = final.toPNG().toString('base64')
+    await this.repository.upsert(
+      LOGO_KEY,
+      pngBase64,
+      'Logo del negocio',
+      'negocio',
+      'La imagen que identifica tu estudio. Aparece en el menú lateral y en los recibos.'
+    )
+  }
+
+  /**
+   * @description Devuelve el logo guardado como data URL listo para el renderer.
+   */
+  async getLogo(): Promise<{ dataUrl: string | null }> {
+    const value = await this.repository.findByKey(LOGO_KEY)
+    if (!value || value.length < 20) {
+      return { dataUrl: null }
+    }
+    return { dataUrl: `data:image/png;base64,${value}` }
+  }
+
+  /**
+   * @description Elimina el logo del negocio.
+   */
+  async removeLogo(): Promise<void> {
+    await this.repository.delete(LOGO_KEY)
   }
 }

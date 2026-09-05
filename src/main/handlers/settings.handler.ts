@@ -5,7 +5,7 @@ import { ipcMain } from 'electron'
 import { z } from 'zod'
 import { IPC_CHANNELS } from '../../../shared/types/ipc'
 import { SettingsService } from '../services/settings.service'
-import { requireAdmin } from '../auth/permissions'
+import { requireAdmin, requireStaff } from '../auth/permissions'
 
 const channels = IPC_CHANNELS.SETTINGS
 
@@ -73,6 +73,46 @@ export function registerSettingsHandlers(service: SettingsService) {
         const parsed = SettingsItemsSchema.parse(items)
         await service.setMany(parsed)
         return { success: true }
+      } catch (err) {
+        return { success: false, error: (err as Error).message }
+      }
+    })
+  )
+
+  // ─── Guardar logo ───────────────────────────────────────
+  ipcMain.handle(
+    channels.SET_LOGO,
+    requireAdmin(async (_event, dataUrl: unknown) => {
+      try {
+        const parsed = z.string().min(20).max(2_500_000, 'Logo demasiado grande').parse(dataUrl)
+        await service.setLogo(parsed)
+        return { success: true, message: 'Logo guardado exitosamente' }
+      } catch (err) {
+        return { success: false, error: (err as Error).message }
+      }
+    })
+  )
+
+  // ─── Obtener logo ───────────────────────────────────────
+  ipcMain.handle(
+    channels.GET_LOGO,
+    requireStaff(async () => {
+      try {
+        const data = await service.getLogo()
+        return { success: true, data }
+      } catch (err) {
+        return { success: false, error: (err as Error).message }
+      }
+    })
+  )
+
+  // ─── Quitar logo ────────────────────────────────────────
+  ipcMain.handle(
+    channels.REMOVE_LOGO,
+    requireAdmin(async () => {
+      try {
+        await service.removeLogo()
+        return { success: true, message: 'Logo eliminado' }
       } catch (err) {
         return { success: false, error: (err as Error).message }
       }
