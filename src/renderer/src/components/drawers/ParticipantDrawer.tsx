@@ -131,6 +131,7 @@ export function ParticipantDrawer({ eventId }: ParticipantDrawerProps) {
     cedula: '',
     phone: '',
     email: '',
+    address: '',
     notes: '',
   })
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
@@ -160,6 +161,7 @@ export function ParticipantDrawer({ eventId }: ParticipantDrawerProps) {
           cedula: '',
           phone: '',
           email: '',
+          address: '',
           notes: '',
         })
         // Inicializar la primera fila con el precio base del evento (UX)
@@ -175,6 +177,7 @@ export function ParticipantDrawer({ eventId }: ParticipantDrawerProps) {
           cedula: participant.cedula || '',
           phone: participant.phone || '',
           email: participant.email || '',
+          address: participant.address || '',
           notes: participant.notes || '',
         })
         setItems(
@@ -289,6 +292,7 @@ export function ParticipantDrawer({ eventId }: ParticipantDrawerProps) {
       cedula: formData.cedula.trim(),
       phone: formData.phone.trim(),
       email: formData.email?.trim() || null,
+      address: formData.address?.trim() || null,
       quantity: base.cantidad || 1,
       unitPrice: base.precio_unitario > 0 ? base.precio_unitario : undefined,
       notes: formData.notes || null,
@@ -483,6 +487,18 @@ export function ParticipantDrawer({ eventId }: ParticipantDrawerProps) {
                     </p>
                   </div>
                 </div>
+
+                {/* Dirección */}
+                {participant.address && (
+                  <div>
+                    <label className="text-xs font-medium uppercase tracking-wider text-gray-500">
+                      Dirección
+                    </label>
+                    <p className={`mt-1 text-sm ${valCls}`}>
+                      {participant.address}
+                    </p>
+                  </div>
+                )}
 
                 {/* Estados */}
                 <div className="grid grid-cols-2 gap-4">
@@ -741,6 +757,21 @@ export function ParticipantDrawer({ eventId }: ParticipantDrawerProps) {
                       <p className="mt-1 text-xs text-red-400">{formErrors.email}</p>
                     )}
                   </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-medium uppercase tracking-wider text-gray-500">
+                    Dirección
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.address}
+                    onChange={(e) =>
+                      setFormData({ ...formData, address: e.target.value })
+                    }
+                    placeholder="Dirección de entrega (opcional)"
+                    className={inputBase}
+                  />
                 </div>
 
                 {/* ─── Detalle de Compra (patrón carrito) ─────── */}

@@ -15,6 +15,7 @@ interface ParsedRow {
   cedula: string
   phone: string
   email: string
+  address: string
   quantity: number
   isValid: boolean
   errors: string[]
@@ -57,6 +58,7 @@ export function CsvImportDrawer() {
     )
     const phoneIdx = header.findIndex((h) => h.includes('telefono') || h.includes('teléfono') || h === 'phone')
     const emailIdx = header.findIndex((h) => h.includes('email') || h.includes('correo'))
+    const addressIdx = header.findIndex((h) => h.includes('direccion') || h.includes('dirección') || h.includes('address') || h === 'dir')
     const qtyIdx = header.findIndex((h) => h.includes('cantidad') || h === 'quantity')
 
     if (nameIdx === -1) return []
@@ -69,6 +71,7 @@ export function CsvImportDrawer() {
       const cedula = cedulaIdx >= 0 ? cols[cedulaIdx] || '' : ''
       const phone = phoneIdx >= 0 ? cols[phoneIdx] || '' : ''
       const email = emailIdx >= 0 ? cols[emailIdx] || '' : ''
+      const address = addressIdx >= 0 ? cols[addressIdx] || '' : ''
       const qty = qtyIdx >= 0 ? parseInt(cols[qtyIdx]) || 1 : 1
 
       if (!name || name.length < 2) rowErrors.push('Nombre requerido')
@@ -82,6 +85,7 @@ export function CsvImportDrawer() {
         cedula,
         phone,
         email,
+        address,
         quantity: qty,
         isValid: rowErrors.length === 0,
         errors: rowErrors,
@@ -128,6 +132,7 @@ export function CsvImportDrawer() {
         cedula: r.cedula || null,
         phone: r.phone || null,
         email: r.email || null,
+        address: r.address || null,
         quantity: r.quantity,
       }))
 
@@ -216,7 +221,7 @@ export function CsvImportDrawer() {
                   Haz click o arrastra un archivo CSV
                 </p>
                 <p className={`mt-1 text-xs ${t.textFaint}`}>
-                  Columnas esperadas: nombre, cédula, teléfono, email, cantidad
+                  Columnas esperadas: nombre, cédula, teléfono, email, dirección, cantidad
                 </p>
                 <input
                   ref={fileInputRef}

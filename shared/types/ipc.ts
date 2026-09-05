@@ -70,6 +70,7 @@ export const IPC_CHANNELS = {
     CREATE: 'payments:create',
     FIND_BY_PARTICIPANT: 'payments:findByParticipant',
     DELETE: 'payments:delete',
+    CORRECT: 'payments:correct', // Deshacer un pago erróneo y recalcular estado
   } as const,
 
   // ─── PDF ──────────────────────────────────────────────────
@@ -91,6 +92,9 @@ export const IPC_CHANNELS = {
     SET_MANY: 'settings:setMany',
     RESET_CATEGORY: 'settings:resetCategory',
     RESET_ALL: 'settings:resetAll',
+    SET_LOGO: 'settings:setLogo',        // Guardar logo (base64 PNG) — solo ADMIN
+    GET_LOGO: 'settings:getLogo',        // Leer logo (data URL) — todos los roles
+    REMOVE_LOGO: 'settings:removeLogo',  // Quitar logo — solo ADMIN
   } as const,
 
   // ─── Dashboard ───────────────────────────────────────────
@@ -251,6 +255,7 @@ export interface ParticipantSummary {
   cedula: string | null
   phone: string | null
   email: string | null
+  address?: string | null
   quantity: number
   unitPrice: number | null
   items: PurchaseItem[] | null
@@ -290,7 +295,13 @@ export interface EventStats {
 export interface DashboardStatsParams {
   dateFrom?: string
   dateTo?: string
-  category?: 'SACRAMENTAL' | 'ESCOLAR' | 'ESTUDIO'
+  category?:
+    | 'SACRAMENTAL'
+    | 'ESCOLAR'
+    | 'ESTUDIO'
+    | 'VASOS_Y_CAMISETAS'
+    | 'BODAS_Y_15'
+    | 'MARKETING_DIGITAL'
 }
 
 /**
@@ -484,6 +495,23 @@ export interface ParticipantPayments {
     outstanding: number
     paymentStatus: string
   }
+}
+
+/** Resultado de payments:correct (deshacer pago erróneo y recalcular). */
+export interface PaymentCorrectionResult {
+  deletedPayments: number
+  participantId: string
+  summary: {
+    totalCost: number
+    paidAmount: number
+    outstanding: number
+    paymentStatus: string
+  }
+}
+
+/** Respuesta de settings:getLogo. dataUrl: data:image/png;base64,... o null. */
+export interface LogoInfo {
+  dataUrl: string | null
 }
 
 /** Respuesta de database:getInfo. */

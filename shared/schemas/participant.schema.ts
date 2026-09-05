@@ -99,6 +99,7 @@ export const CreateParticipantSchema = z.object({
     .email('Email inválido')
     .nullable()
     .optional(),
+  address: z.string().trim().max(300, 'La dirección es demasiado larga').nullable().optional(),
   notes: z.string().max(500).nullable().optional(),
   quantity: z.number().int().min(1).max(999).default(1),
   unitPrice: z.number().min(0).nullable().optional(),
@@ -189,6 +190,7 @@ export const ImportCsvRowSchema = z.object({
     .optional()
     .refine((v) => !v || isValidColombianPhone(v), CO_PHONE_MESSAGE),
   email: z.string().email('Email inválido').nullable().optional(),
+  address: z.string().trim().max(300).nullable().optional(),
   quantity: z.number().int().min(1).max(999).default(1),
 })
 
