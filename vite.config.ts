@@ -4,6 +4,10 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
+  // base relativo: en producción la app se carga con file:// vía loadFile y
+  // rutas absolutas (/assets/...) apuntarían a la raíz del disco, no a la carpeta
+  // de la app => "pantalla negra". Con './' se generan rutas relativas válidas.
+  base: './',
   root: '.',
   publicDir: 'public',
   build: {
