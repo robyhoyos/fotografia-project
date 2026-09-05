@@ -11,29 +11,13 @@ import {
 } from '../../hooks/useEvents'
 import { useToast } from '../../hooks/useToast'
 import { useSettingValue } from '../../hooks/useSettings'
-import { CategorySubtypeMap } from '../../../../../shared/schemas/event.schema'
+import {
+  CategorySubtypeMap,
+  EventCategoryLabels,
+  EventSubtypeLabels,
+} from '../../../../../shared/schemas/event.schema'
 import type { CreateEventInput } from '../../../../../shared/schemas/event.schema'
 import type { StoredEvent } from '../../../../../shared/types/ipc'
-
-const SUBTYPE_LABELS: Record<string, string> = {
-  BODA: 'Boda',
-  COMUNION: 'Comunión',
-  BAUTIZO: 'Bautizo',
-  CONFIRMACION: 'Confirmación',
-  RETRATO_GRUPO: 'Retrato Grupo',
-  ANUARIO: 'Anuario',
-  GRADUACION: 'Graduación',
-  RETRATO_FAMILIAR: 'Retrato Familiar',
-  RETRATO_INDIVIDUAL: 'Retrato Individual',
-  BOOK_FOTOGRAFICO: 'Book Fotográfico',
-  EVENTO_CORPORATIVO: 'Evento Corporativo',
-}
-
-const CATEGORY_LABELS: Record<string, string> = {
-  SACRAMENTAL: 'Sacramental',
-  ESCOLAR: 'Escolar',
-  ESTUDIO: 'Estudio',
-}
 
 interface EventFormData {
   name: string
@@ -242,7 +226,7 @@ export function EventDrawer() {
                     }
                     className={inputClass}
                   >
-                    {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
+                    {Object.entries(EventCategoryLabels).map(([value, label]) => (
                       <option key={value} value={value}>
                         {label}
                       </option>
@@ -261,7 +245,7 @@ export function EventDrawer() {
                   >
                     {availableSubtypes.map((st) => (
                       <option key={st} value={st}>
-                        {SUBTYPE_LABELS[st] || st}
+                        {EventSubtypeLabels[st] || st}
                       </option>
                     ))}
                   </select>
