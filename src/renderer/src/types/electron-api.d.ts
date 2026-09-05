@@ -22,6 +22,8 @@ import type {
   BulkDeleteResult,
   ImportCsvResult,
   ParticipantPayments,
+  PaymentCorrectionResult,
+  LogoInfo,
   StoredEvent,
   StoredPayment,
   ExportXlsxResult,
@@ -88,6 +90,7 @@ declare global {
         create: (payload: { participantId: string; amount: number; method?: string | null; notes?: string | null }) => Promise<ApiResponse<StoredPayment>>
         findByParticipant: (payload: { participantId: string }) => Promise<ApiResponse<ParticipantPayments>>
         delete: (payload: { id: string }) => Promise<ApiResponse<{ deleted: boolean }>>
+        correct: (payload: { participantId: string }) => Promise<ApiResponse<PaymentCorrectionResult>>
       }
       pdf: {
         generateReceipt: (payload: Record<string, unknown>) => Promise<ApiResponse<{ path: string }>>
@@ -103,6 +106,9 @@ declare global {
         setMany: (items: Array<{ key: string; value: string }>) => Promise<ApiResponse<null>>
         resetCategory: (category: string) => Promise<ApiResponse<null>>
         resetAll: () => Promise<ApiResponse<null>>
+        setLogo: (dataUrl: string) => Promise<ApiResponse<null>>
+        getLogo: () => Promise<ApiResponse<LogoInfo>>
+        removeLogo: () => Promise<ApiResponse<null>>
       }
       dashboard: {
         getStats: (params?: {

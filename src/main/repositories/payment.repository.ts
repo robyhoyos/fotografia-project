@@ -160,6 +160,75 @@ export class PaymentRepository {
 
     return { deleted: true }
   }
+
+  /**
+   * @method correct
+   * @description Deshace el pago más reciente del participante (el que suele
+   * causar un 'PAGO_TOTAL' registrado por error) y recalcula paidAmount y
+   * paymentStatus a partir de los pagos restantes del ledger.
+   */
+  async correct(participantId: string) {
+    const latest = await this.prisma.payment.findFirst({
+      where: { participantId },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      select: { id: true },
+    })
+
+    if (!latest) {
+      throw new Error('No hay pagos registrados para corregir')
+    }
+
+    await this.prisma.payment.delete({ where: { id: latest.id } })
+
+    const remaining = await this.prisma.payment.findMany({
+      where: { participantId },
+      select: { amount: true },
+    })
+    const newPaidAmount = remaining.reduce((sum, p) => sum + p.amount, 0)
+
+    const participant = await this.prisma.participant.findUnique({
+      where: { id: participantId },
+      select: {
+        unitPrice: true,
+        quantity: true,
+        totalAmount: true,
+        items: true,
+        event: { select: { coverPrice: true } },
+      },
+    })
+
+    if (!participant) {
+      throw new Error('Participante no encontrado')
+    }
+
+    const totalCost = getParticipantTotalCost(participant)
+
+    let newPaymentStatus: string = 'SIN_PAGO'
+    if (newPaidAmount >= totalCost) {
+      newPaymentStatus = 'PAGO_TOTAL'
+    } else if (newPaidAmount > 0) {
+      newPaymentStatus = 'PAGO_PARCIAL'
+    }
+
+    await this.prisma.participant.update({
+      where: { id: participantId },
+      data: {
+        paidAmount: newPaidAmount,
+        paymentStatus: newPaymentStatus as PaymentStatus,
+      },
+    })
+
+    return {
+      deletedPayments: 1,
+      participantId,
+      summary: {
+        totalCost,
+        paidAmount: newPaidAmount,
+        outstanding: totalCost - newPaidAmount,
+        paymentStatus: newPaymentStatus,
+      },
+    }
+  }
 }
 
 /**

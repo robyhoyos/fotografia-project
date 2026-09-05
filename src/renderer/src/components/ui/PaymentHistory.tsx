@@ -3,7 +3,7 @@
 // Muestra lista de transacciones, resumen de saldo, y permite agregar/eliminar pagos.
 
 import React, { useState } from 'react'
-import { usePaymentHistory, useCreatePayment, useDeletePayment } from '../../hooks/usePayments'
+import { usePaymentHistory, useCreatePayment, useDeletePayment, useCorrectPayment } from '../../hooks/usePayments'
 import { useGenerateReceipt } from '../../hooks/usePdf'
 import { usePaymentMethods, useSettingValue } from '../../hooks/useSettings'
 import { formatCOP } from '../../lib/format'
@@ -44,10 +44,11 @@ export function PaymentHistory({
 }: PaymentHistoryProps) {
   const t = useThemeTokens()
   const theme = useUIStore((s) => s.theme)
-  const { readOnly } = useRole()
+  const { canManagePayments } = useRole()
   const { data, isLoading } = usePaymentHistory(participantId)
   const createPayment = useCreatePayment()
   const deletePayment = useDeletePayment()
+  const correctPayment = useCorrectPayment()
   const generateReceipt = useGenerateReceipt()
   const { success, error: toastError } = useToast()
 
@@ -56,6 +57,7 @@ export function PaymentHistory({
   const businessTagline = useSettingValue('business_tagline', 'Gestión Fotográfica de Eventos')
   const pdfPageSize = useSettingValue('pdf_page_size', 'A4')
   const pdfAccentColor = useSettingValue('pdf_accent_color', '#22c55e')
+  const businessLogoBase64 = useSettingValue('business_logo', '')
 
   const [paymentType, setPaymentType] = useState<'ABONO' | 'PAGO_TOTAL'>('ABONO')
   const { displayValue: amountDisplay, amount, onChange: onAmountChange, reset: resetAmount, set: setAmount } =
@@ -63,6 +65,7 @@ export function PaymentHistory({
   const [method, setMethod] = useState('')
   const [notes, setNotes] = useState('')
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
+  const [showCorrectConfirm, setShowCorrectConfirm] = useState(false)
 
   if (isLoading) {
     return (
@@ -107,6 +110,25 @@ export function PaymentHistory({
     setDeleteTarget(null)
   }
 
+  const handleCorrectPayment = () => {
+    correctPayment.mutate(
+      { participantId },
+      {
+        onSuccess: () => {
+          setShowCorrectConfirm(false)
+          success(
+            'Pago corregido',
+            'Se eliminó el último pago y se recalculó el saldo'
+          )
+        },
+        onError: (err) => {
+          setShowCorrectConfirm(false)
+          toastError('No se pudo corregir el pago', err.message)
+        },
+      }
+    )
+  }
+
   const handleGenerateReceipt = () => {
     generateReceipt.mutate(
       {
@@ -114,6 +136,7 @@ export function PaymentHistory({
         businessTagline,
         pdfPageSize: pdfPageSize as 'A4' | 'Letter' | 'Legal',
         pdfAccentColor,
+        businessLogoBase64: businessLogoBase64 || undefined,
         eventName,
         eventDate,
         eventLocation,
@@ -205,7 +228,7 @@ export function PaymentHistory({
       </div>
 
       {/* ─── Registrar pago (siempre visible) ──────────────── */}
-      {!readOnly && summary.outstanding > 0 && (
+      {canManagePayments && summary.outstanding > 0 && (
         <div className={`rounded-lg border p-4 space-y-3 ${t.border} ${t.cardBg}`}>
           <span className={`text-xs font-medium uppercase tracking-wider ${t.textMuted}`}>
             Registrar pago
@@ -318,6 +341,29 @@ export function PaymentHistory({
         {generateReceipt.isPending ? 'Generando...' : 'Generar recibo PDF'}
       </button>
 
+      {/* ─── Corregir pago total erróneo ───────────────────── */}
+      {canManagePayments && summary.paymentStatus === 'PAGO_TOTAL' && payments.length > 0 && (
+        <div className={`rounded-lg border border-amber-500/40 bg-amber-500/5 p-4 space-y-2 ${t.cardBg}`}>
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className={`text-xs font-medium uppercase tracking-wider ${t.accent}`}>
+                ¿Pago registrado por error?
+              </p>
+              <p className={`text-xs mt-1 ${t.textMuted}`}>
+                Deshacer el último pago ({formatCOP(payments[0].amount)}) y recalcular el estado.
+              </p>
+            </div>
+            <button
+              onClick={() => setShowCorrectConfirm(true)}
+              disabled={correctPayment.isPending}
+              className={`shrink-0 rounded-lg border border-amber-500/60 px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50 ${t.accent} hover:bg-amber-500/10`}
+            >
+              {correctPayment.isPending ? 'Corrigiendo...' : 'Corregir pago'}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ─── Lista de pagos ────────────────────────────────── */}
       {payments.length > 0 ? (
         <div className="space-y-2">
@@ -353,7 +399,7 @@ export function PaymentHistory({
                   })}
                 </p>
               </div>
-              {!readOnly && (
+              {canManagePayments && (
                 <button
                   onClick={() => setDeleteTarget(payment.id)}
                   className={`ml-2 rounded p-1 opacity-0 group-hover:opacity-100 transition-all ${t.textFaint} ${
@@ -386,6 +432,17 @@ export function PaymentHistory({
         variant="danger"
         onConfirm={handleDeletePayment}
         onCancel={() => setDeleteTarget(null)}
+      />
+
+      {/* ─── Confirmación de corrección ───────────────────── */}
+      <ConfirmDialog
+        isOpen={showCorrectConfirm}
+        title="Corregir pago"
+        message={`Se eliminará el último pago (${formatCOP(payments[0]?.amount ?? 0)}) y el estado volverá a SIN PAGO o PARCIAL según el saldo restante.`}
+        confirmLabel="Sí, corregir"
+        variant="warning"
+        onConfirm={handleCorrectPayment}
+        onCancel={() => setShowCorrectConfirm(false)}
       />
     </div>
   )

@@ -6,7 +6,7 @@ import { ipcMain, BrowserWindow } from 'electron'
 import { z } from 'zod'
 import { IPC_CHANNELS } from '../../../shared/types/ipc'
 import { generateReceiptPDF } from '../services/pdf.service'
-import { requireAdmin } from '../auth/permissions'
+import { requireStaff } from '../auth/permissions'
 
 const channels = IPC_CHANNELS.PDF
 
@@ -24,6 +24,10 @@ const ReceiptInputSchema = z.object({
   businessTagline: z.string().optional(),
   pdfPageSize: z.enum(['A4', 'Letter', 'Legal']).optional(),
   pdfAccentColor: z.string().regex(/^#([0-9a-fA-F]{6})$/, 'Color hex inválido').optional(),
+  businessLogoBase64: z
+    .string()
+    .max(2_500_000, 'Logo demasiado grande para el recibo')
+    .optional(),
   eventName: z.string().min(1, 'El nombre del evento es obligatorio'),
   eventDate: z.union([z.string(), z.date()]),
   eventLocation: z.string().nullable().optional(),
@@ -47,7 +51,7 @@ const ReceiptInputSchema = z.object({
  */
 export function registerPdfHandlers() {
   // ─── Generar recibo de pago ────────────────────────────────
-  ipcMain.handle(channels.GENERATE_RECEIPT, requireAdmin(async (event, payload) => {
+  ipcMain.handle(channels.GENERATE_RECEIPT, requireStaff(async (event, payload) => {
     try {
       const win = BrowserWindow.fromWebContents(event.sender)
       if (!win) {
