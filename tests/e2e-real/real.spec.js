@@ -15,10 +15,24 @@ async function testDb() {
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────
-async function createEventViaUi(page, name) {
+async function createEventViaUi(page, name, { category, subtype } = {}) {
   await page.getByRole('button', { name: 'Nuevo Evento' }).click();
   await page.getByPlaceholder('Ej: Primera Comunión San José').first().fill(name);
   await page.getByPlaceholder('Parroquia, escuela, estudio...').first().fill('Parroquia San José');
+  if (category) {
+    await page
+      .locator('label', { hasText: 'Categoría *' })
+      .locator('..')
+      .locator('select')
+      .selectOption(category);
+  }
+  if (subtype) {
+    await page
+      .locator('label', { hasText: 'Subtipo *' })
+      .locator('..')
+      .locator('select')
+      .selectOption(subtype);
+  }
   await page.getByPlaceholder('0.00').first().fill('150000');
   await page.locator('input[type="datetime-local"]').first().fill('2026-12-15T10:00');
   await page.getByRole('button', { name: 'Crear Evento' }).click();
@@ -31,12 +45,15 @@ async function openEvent(page, name) {
 }
 
 // payment: 'SIN_PAGO' (default) | 'PAGO_TOTAL' | 'PAGO_PARCIAL' (requiere `abono`)
-async function createParticipant(page, { name, cedula, phone, payment = 'SIN_PAGO', abono }) {
+async function createParticipant(page, { name, cedula, phone, payment = 'SIN_PAGO', abono, address }) {
   await page.getByRole('button', { name: 'Nuevo Participante', exact: true }).click();
   await expect(page.getByText('Nombre *', { exact: false })).toBeVisible();
   await page.getByText('Nombre *', { exact: false }).locator('..').locator('input').fill(name);
   await page.getByPlaceholder('Número de documento').fill(cedula);
   await page.getByPlaceholder('300 123 4567').fill(phone);
+  if (address) {
+    await page.getByPlaceholder('Dirección de entrega (opcional)').fill(address);
+  }
   if (payment === 'PAGO_TOTAL') {
     await page.getByText('Pago total', { exact: false }).click();
   } else if (payment === 'PAGO_PARCIAL') {
@@ -545,4 +562,121 @@ test('generar recibo de pago produce un PDF real y persistente', async ({ realAp
   expect(buf.length).toBeGreaterThan(2000);
 
   fs.unlinkSync(outPath);
+});
+
+// ─── Novedades v2.0 ──────────────────────────────────────────────────────
+
+test('crear un evento con la categoría nueva Bodas y 15 persiste en BD real (v2.0)', async ({ realApp }) => {
+  const { page } = realApp;
+  const eventName = 'Boda Categoría Nueva';
+
+  await createEventViaUi(page, eventName, { category: 'BODAS_Y_15', subtype: 'BODA' });
+
+  const prisma = await testDb();
+  const created = await prisma.event.findFirst({ where: { name: eventName } });
+  await prisma.$disconnect();
+
+  expect(created).not.toBeNull();
+  expect(created.category).toBe('BODAS_Y_15');
+  expect(created.subtype).toBe('BODA');
+});
+
+test('crear un participante con dirección persiste en BD real (v2.0)', async ({ realApp }) => {
+  const { page } = realApp;
+  const eventName = 'Evento Con Dirección';
+
+  await createEventViaUi(page, eventName);
+  await openEvent(page, eventName);
+  await createParticipant(page, {
+    name: 'Sofía Restrepo',
+    cedula: '1010002020',
+    phone: '3125557777',
+    address: 'Calle 10 # 20-30, Medellín',
+  });
+
+  await expect(page.getByText('Sofía Restrepo', { exact: true }).first()).toBeVisible();
+
+  const prisma = await testDb();
+  const participant = await prisma.participant.findFirst({
+    where: { name: 'Sofía Restrepo' },
+  });
+  await prisma.$disconnect();
+
+  expect(participant).not.toBeNull();
+  expect(participant.address).toBe('Calle 10 # 20-30, Medellín');
+});
+
+test('corregir un pago registrado por error recalcula el saldo en BD real (v2.0)', async ({ realApp }) => {
+  const { page } = realApp;
+  const eventName = 'Evento Corregir Pago';
+
+  await createEventViaUi(page, eventName);
+  await openEvent(page, eventName);
+  await createParticipant(page, {
+    name: 'Lina Herrera',
+    cedula: '1022223333',
+    phone: '3138886666',
+    payment: 'PAGO_PARCIAL',
+    abono: 50000,
+  });
+
+  await page.getByText('Lina Herrera', { exact: true }).first().click();
+  await expect(page.getByText('Detalle del Participante')).toBeVisible();
+
+  await page.getByPlaceholder('Monto del abono (COP)').fill('100000');
+  await page.getByRole('button', { name: 'Registrar pago' }).click();
+  await expect(page.getByText('+$100.000', { exact: false })).toBeVisible();
+
+  let prisma = await testDb();
+  let participant = await prisma.participant.findFirst({ where: { name: 'Lina Herrera' } });
+  await prisma.$disconnect();
+  expect(participant.paymentStatus).toBe('PAGO_TOTAL');
+  expect(participant.paidAmount).toBe(150000);
+
+  await page.getByRole('button', { name: 'Corregir pago', exact: true }).click();
+  await expect(page.getByText('Corregir pago', { exact: true }).last()).toBeVisible();
+  await page.getByRole('button', { name: 'Sí, corregir' }).click();
+  await expect(page.getByText('Pago corregido', { exact: false })).toBeVisible();
+
+  prisma = await testDb();
+  participant = await prisma.participant.findFirst({ where: { name: 'Lina Herrera' } });
+  const payments = participant
+    ? await prisma.payment.findMany({ where: { participantId: participant.id } })
+    : [];
+  await prisma.$disconnect();
+
+  expect(participant.paymentStatus).toBe('PAGO_PARCIAL');
+  expect(participant.paidAmount).toBe(50000);
+  expect(payments).toHaveLength(1);
+  expect(payments[0].amount).toBe(50000);
+});
+
+test('subir un logo del negocio lo muestra en el menú lateral (v2.0)', async ({ realApp }) => {
+  const { page } = realApp;
+  const PNG_1PX = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+    'base64'
+  );
+
+  await page.locator('aside').getByText('Configuración', { exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Configuración' })).toBeVisible();
+
+  await page.locator('input[type="file"]').first().setInputFiles({
+    name: 'logo.png',
+    mimeType: 'image/png',
+    buffer: PNG_1PX,
+  });
+
+  await expect(page.getByText('Logo guardado', { exact: true })).toBeVisible();
+
+  const sidebarLogo = page.locator('aside img').first();
+  await expect(sidebarLogo).toBeVisible();
+  await expect(sidebarLogo).toHaveAttribute('src', /^data:image\/png;base64,[A-Za-z0-9+/=]+$/);
+
+  const prisma = await testDb();
+  const setting = await prisma.setting.findFirst({ where: { key: 'business_logo' } });
+  await prisma.$disconnect();
+  expect(setting).not.toBeNull();
+  expect(setting.value.length).toBeGreaterThan(100);
+  expect(setting.value).toMatch(/^[A-Za-z0-9+/=]+$/);
 });
