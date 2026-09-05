@@ -13,7 +13,7 @@ import { useRole } from '../../hooks/useRole'
 import { ConfirmDialog } from './ConfirmDialog'
 import { useThemeTokens } from '../../lib/theme'
 import { useUIStore } from '../../stores/ui.store'
-import type { StoredPayment } from '../../../../../shared/types/ipc'
+import type { PurchaseItem, StoredPayment } from '../../../../../shared/types/ipc'
 
 interface PaymentHistoryProps {
   participantId: string
@@ -24,6 +24,7 @@ interface PaymentHistoryProps {
   quantity: number
   unitPrice: number | null
   coverPrice: number
+  items: PurchaseItem[] | null
   eventName: string
   eventDate: string
   eventLocation: string | null
@@ -38,6 +39,7 @@ export function PaymentHistory({
   quantity,
   unitPrice,
   coverPrice,
+  items,
   eventName,
   eventDate,
   eventLocation,
@@ -151,6 +153,14 @@ export function PaymentHistory({
         paidAmount: summary.paidAmount,
         outstanding: summary.outstanding,
         paymentStatus: summary.paymentStatus,
+        items: items?.length
+          ? items.map((it) => ({
+              descripcion: it.descripcion,
+              cantidad: it.cantidad,
+              precio_unitario: it.precio_unitario,
+              subtotal: it.subtotal,
+            }))
+          : undefined,
         payments: payments.map((p: StoredPayment) => ({
           amount: p.amount,
           method: p.method,

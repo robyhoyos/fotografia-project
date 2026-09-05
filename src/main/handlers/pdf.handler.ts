@@ -19,6 +19,14 @@ const PaymentSchema = z.object({
   createdAt: z.union([z.string(), z.date()]),
 })
 
+const ReceiptItemSchema = z.object({
+  id: z.string().optional(),
+  descripcion: z.string(),
+  cantidad: z.number().finite('Cantidad inválida').min(0),
+  precio_unitario: z.number().finite('Precio inválido').min(0),
+  subtotal: z.number().finite('Subtotal inválido').min(0),
+})
+
 const ReceiptInputSchema = z.object({
   businessName: z.string().optional(),
   businessTagline: z.string().optional(),
@@ -42,6 +50,7 @@ const ReceiptInputSchema = z.object({
   paidAmount: z.number().finite('Monto inválido').min(0),
   outstanding: z.number().finite('Monto inválido').min(0),
   paymentStatus: z.string(),
+  items: z.array(ReceiptItemSchema).optional(),
   payments: z.array(PaymentSchema),
 })
 

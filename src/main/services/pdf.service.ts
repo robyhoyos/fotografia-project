@@ -34,6 +34,12 @@ interface ReceiptData {
   paidAmount: number
   outstanding: number
   paymentStatus: string
+  items?: {
+    descripcion: string
+    cantidad: number
+    precio_unitario: number
+    subtotal: number
+  }[]
   payments: {
     amount: number
     method: string | null
@@ -300,17 +306,58 @@ export async function generateReceiptPDF(
     drawHR(y)
     y += 14
 
-    const price = data.unitPrice || data.coverPrice
-    doc.font(FONT).fontSize(10).fillColor(C_VALUE)
+    // Detalle de la compra: usa los ítems reales del participante (paquete,
+    // vasos, camisas, etc.) y cae a una línea genérica si no hay ítems.
+    const detRows = data.items && data.items.length > 0 ? data.items : null
 
-    doc.text('Fotografías / copias', detCols[0].x, y, { width: detCols[0].w, lineBreak: false })
-    doc.text(String(data.quantity), detCols[1].x, y, { width: detCols[1].w, align: detCols[1].align, lineBreak: false })
-    doc.text(formatCOP(price), detCols[2].x, y, { width: detCols[2].w, align: detCols[2].align, lineBreak: false })
-    amountValue(detCols[3].x, y, data.totalCost, detCols[3].w)
+    const drawDetailRow = (
+      rowY: number,
+      desc: string,
+      cantidad: number,
+      precio: number,
+      total: number
+    ) => {
+      doc.font(FONT).fontSize(10).fillColor(C_VALUE)
+      doc.text(desc, detCols[0].x, rowY, { width: detCols[0].w, lineBreak: false })
+      doc.text(String(cantidad), detCols[1].x, rowY, { width: detCols[1].w, align: detCols[1].align, lineBreak: false })
+      doc.text(formatCOP(precio), detCols[2].x, rowY, { width: detCols[2].w, align: detCols[2].align, lineBreak: false })
+      amountValue(detCols[3].x, rowY, total, detCols[3].w)
+    }
 
-    y += 20
-    drawHR(y, accent, 1)
-    y += 28 // margen inferior de la tabla Detalle
+    if (detRows) {
+      let ry = y
+      detRows.forEach((item, idx) => {
+        if (ry > BOTTOM_LIMIT) {
+          doc.addPage()
+          ry = 45
+          label(detCols[0].x, ry, 'Descripción', detCols[0].w)
+          label(detCols[1].x, ry, 'Cantidad', detCols[1].w)
+          label(detCols[2].x, ry, 'Precio unit.', detCols[2].w)
+          label(detCols[3].x, ry, 'Total', detCols[3].w)
+          ry += 16
+          drawHR(ry)
+          ry += 14
+        }
+
+        const desc = has(item.descripcion)
+          ? item.descripcion
+          : idx === 0
+          ? 'Paquete'
+          : `Artículo ${idx + 1}`
+        drawDetailRow(ry, desc, item.cantidad, item.precio_unitario, item.subtotal)
+
+        ry += 20
+        drawHR(ry)
+        ry += 14
+      })
+      y = ry
+    } else {
+      const price = data.unitPrice || data.coverPrice
+      drawDetailRow(y, 'Fotografías / copias', data.quantity, price, data.totalCost)
+      y += 20
+      drawHR(y, accent, 1)
+      y += 28 // margen inferior de la tabla Detalle
+    }
 
     // ─── Caja de totales: Resumen de Pago (derecha) ─────────────
     const boxW = 252

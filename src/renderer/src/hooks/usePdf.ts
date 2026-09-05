@@ -29,6 +29,12 @@ export function useGenerateReceipt() {
       paidAmount: number
       outstanding: number
       paymentStatus: string
+      items?: {
+        descripcion: string
+        cantidad: number
+        precio_unitario: number
+        subtotal: number
+      }[]
       payments: {
         amount: number
         method: string | null

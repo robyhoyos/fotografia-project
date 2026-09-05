@@ -652,6 +652,7 @@ export function ParticipantDrawer({ eventId }: ParticipantDrawerProps) {
                       quantity={participant.items?.[0]?.cantidad ?? participant.quantity}
                       unitPrice={participant.items?.[0]?.precio_unitario ?? participant.unitPrice ?? null}
                       coverPrice={participant.event?.coverPrice ?? 0}
+                      items={participant.items ?? null}
                       eventName={participant.event?.name ?? ''}
                       eventDate={participant.event?.date ?? ''}
                       eventLocation={participant.event?.location ?? null}
