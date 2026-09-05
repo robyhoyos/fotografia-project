@@ -4,6 +4,10 @@
 import React from 'react'
 import { useThemeTokens } from '../../lib/theme'
 import { formatCOP } from '../../lib/format'
+import {
+  EventCategoryLabels,
+  EventSubtypeLabels,
+} from '../../../../../shared/schemas/event.schema'
 import type { StoredEvent } from '../../../../../shared/types/ipc'
 
 interface EventTableProps {
@@ -33,6 +37,12 @@ export function EventTable({
         return t.badgeBlue
       case 'ESTUDIO':
         return t.badgePurple
+      case 'VASOS_Y_CAMISETAS':
+        return t.badgeOrange
+      case 'BODAS_Y_15':
+        return t.badgeRed
+      case 'MARKETING_DIGITAL':
+        return t.badgeBlue
       default:
         return t.badgeGray
     }
@@ -123,12 +133,12 @@ export function EventTable({
 
               <td className="px-6 py-4">
                 <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${getCategoryBadgeColor(event.category)}`}>
-                  {event.category}
+                  {EventCategoryLabels[event.category] || event.category}
                 </span>
               </td>
 
               <td className={`px-6 py-4 text-sm ${t.textSecondary}`}>
-                {event.subtype.replace(/_/g, ' ')}
+                {EventSubtypeLabels[event.subtype] || event.subtype.replace(/_/g, ' ')}
               </td>
 
               <td className={`px-6 py-4 text-sm ${t.textSecondary}`}>

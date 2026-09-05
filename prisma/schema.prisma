@@ -1,7 +1,7 @@
 // prisma/schema.prisma
 // Esquema de base de datos para la aplicación de gestión fotográfica.
-// Soporta tres categorías de eventos: Sacramental, Escolar y Estudio,
-// cada una con sus subtipos específicos.
+// Soporta seis categorías de eventos: Sacramental, Escolar, Estudio,
+// Vasos y Camisetas, Bodas y 15 años, y Marketing Digital.
 
 generator client {
   provider      = "prisma-client-js"
@@ -20,6 +20,9 @@ enum EventCategory {
   SACRAMENTAL
   ESCOLAR
   ESTUDIO
+  VASOS_Y_CAMISETAS
+  BODAS_Y_15
+  MARKETING_DIGITAL
 }
 
 // ─── Subtipos de Evento ──────────────────────────────────────────────
@@ -40,6 +43,16 @@ enum EventSubtype {
   RETRATO_INDIVIDUAL
   BOOK_FOTOGRAFICO
   EVENTO_CORPORATIVO
+  // Vasos y Camisetas
+  VASOS
+  CAMISETAS
+  // Bodas y 15 años
+  QUINCE
+  // Marketing Digital
+  VIDEO
+  DISENO
+  FOTOGRAFIA
+  CORPORATIVO
 }
 
 // ─── Estados de un Participante ──────────────────────────────────────
@@ -98,6 +111,7 @@ model Participant {
   cedula        String?           // Número de cédula/identificación (filtrado y reutilización de datos)
   phone         String?           // Teléfono de contacto
   email         String?           // Email (opcional)
+  address       String?           // Dirección de residencia/entrega (opcional)
   notes         String?           // Notas específicas del participante
   quantity      Int               @default(1) // Cantidad de fotos/copias a entregar
   unitPrice     Float?            // Precio unitario (override del evento / valor del paquete base)

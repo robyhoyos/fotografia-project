@@ -38,6 +38,7 @@ export interface RawParticipant {
   cedula: string | null
   phone: string | null
   email: string | null
+  address: string | null
   notes: string | null
   quantity: number
   unitPrice: number | null

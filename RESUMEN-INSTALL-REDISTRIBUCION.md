@@ -1,8 +1,16 @@
-# 📋 GUÍA DE INSTALACIÓN Y DISTRIBUCIÓN — Gestión Fotográfica v1.0.0
+# 📋 GUÍA DE INSTALACIÓN Y DISTRIBUCIÓN — Gestión Fotográfica v2.0.0
 
 > Documento para **quien distribuye** (tú) y para **el usuario final**.
 > La aplicación está **sin firmar** (no se contrató certificado por su costo).
 > Por eso Windows mostrará avisos de SmartScreen la primera vez. Es normal y se explica abajo.
+
+> 🆕 **Novedades v2.0** (respecto a v1.0):
+> - Nuevas categorías/subtipos de eventos: **Vasos y Camisetas**, **Bodas y 15 años**, **Marketing Digital**.
+> - Campo **Dirección** opcional en participantes (manual y por importación CSV).
+> - Botón **"Corregir pago"** para eliminar un pago registrado por error (recalcula el saldo).
+> - **Logo** del negocio: aparece en la pantalla de Ajustes, en el menú lateral y en la factura PDF.
+> - Rol **Ayudante** (lectura compartida) ahora también puede registrar pagos, corregir pagos y generar recibos.
+> - Nota: la base de datos **v1 es compatible**; al abrir la v2.0 se actualiza automáticamente a la estructura nueva.
 
 ---
 
@@ -12,13 +20,13 @@ Los instaladores ya están generados en la carpeta `dist-app\`:
 
 | Archivo | Uso | Tamaño |
 |---------|-----|--------|
-| `Gestión Fotográfica Setup 1.0.0.exe` | Instalador completo (asistente guiado) | ~148 MB |
-| `Gestión Fotográfica 1.0.0.exe` | Portable (sin instalar, directo) | ~148 MB |
+| `Gestión Fotográfica Setup 2.0.0.exe` | Instalador completo (asistente guiado) | ~150 MB |
+| `Gestión Fotográfica 2.0.0.exe` | Portable (sin instalar, directo) | ~150 MB |
 
 ### A.1 Cómo envías el archivo
 Puedes usar cualquiera de estos medios; la app es un `.exe` normal de Windows:
 - **Correo electrónico**: adjuntar el `.exe`. Ojo: muchos servidores de correo bloquean .exe por seguridad.
-  - ✅ Si falla, **comprímelo en un .zip** (`Gestión-Fotografica-v1.0.0.zip`) y adjunta el zip.
+  - ✅ Si falla, **comprímelo en un .zip** (`Gestión-Fotografica-v2.0.0.zip`) y adjunta el zip.
 - **USB / memoria**: copiar el `.exe` a la raíz.
 - **Carpeta compartida / red**: copiar el `.exe` a la carpeta.
 - **Google Drive / OneDrive / WeTransfer**: subir el `.exe` y compartir el enlace de descarga.
@@ -37,7 +45,7 @@ Puedes usar cualquiera de estos medios; la app es un `.exe` normal de Windows:
 
 ### Opción 1 — Instalación completa (recomendada)
 
-1. Recibe el archivo **`Gestión Fotográfica Setup 1.0.0.exe`** (o extráelo si venía en un `.zip`).
+1. Recibe el archivo **`Gestión Fotográfica Setup 2.0.0.exe`** (o extráelo si venía en un `.zip`).
 2. **Doble clic** sobre el archivo.
 3. Si Windows muestra un aviso azul **"Windows protegió su equipo"** o **"Editor desconocido"**:
    - Haz clic en **"Más información"** (o texto en la esquina inferior).
@@ -51,7 +59,7 @@ Puedes usar cualquiera de estos medios; la app es un `.exe` normal de Windows:
 
 ### Opción 2 — Portable (sin instalar)
 
-1. Recibe el archivo **`Gestión Fotográfica 1.0.0.exe`**.
+1. Recibe el archivo **`Gestión Fotográfica 2.0.0.exe`**.
 2. Guárdalo en una carpeta fija, por ejemplo `C:\Usuarios\TuUsuario\Documentos\Gestión Fotográfica\`.
 3. **Doble clic** en el .exe. Se abre igual que la app instalada.
 4. No crea accesos directos automáticamente. Si quieres uno: clic derecho sobre el .exe → **Enviar a** → **Escritorio**.

@@ -91,6 +91,8 @@ export function Sidebar({ activeView, onNavigate }: SidebarProps) {
 
   const businessName = useSettingValue('business_name', 'FotoApp')
   const businessTagline = useSettingValue('business_tagline', 'Gestión Fotográfica')
+  const businessLogo = useSettingValue('business_logo', '')
+  const hasLogo = !!businessLogo && businessLogo.length > 20
 
   if (!sidebarOpen) return null
 
@@ -149,9 +151,18 @@ export function Sidebar({ activeView, onNavigate }: SidebarProps) {
     <aside className={`flex h-full w-56 flex-col ${bgClass} ${borderClass}`}>
       <div className="px-4 py-6">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true" />
-            <div>
+          <div className="flex items-center gap-2.5 min-w-0">
+            {hasLogo ? (
+              <img
+                src={`data:image/png;base64,${businessLogo}`}
+                alt="Logo"
+                title={businessName}
+                className="h-8 w-8 shrink-0 rounded-lg object-contain"
+              />
+            ) : (
+              <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true" />
+            )}
+            <div className="min-w-0">
               <p className="font-display text-base font-bold leading-tight text-white tracking-tight line-clamp-1">{businessName}</p>
               <p className="text-[10px] text-gray-500 uppercase tracking-widest line-clamp-1">{businessTagline}</p>
             </div>
@@ -224,7 +235,7 @@ export function Sidebar({ activeView, onNavigate }: SidebarProps) {
               {user?.displayName || user?.username}
             </p>
             <p className="text-[10px] uppercase tracking-widest text-gray-500">
-              {isAdmin ? 'Administrador' : 'Ayudante · lectura'}
+              {isAdmin ? 'Administrador' : 'Ayudante'}
             </p>
           </div>
           <button

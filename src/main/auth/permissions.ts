@@ -89,6 +89,18 @@ export function requireAdmin<TArgs extends unknown[]>(
   return requireRole<TArgs>('ADMIN', handler)
 }
 
+/**
+ * @function requireStaff
+ * @description Atajo para handlers permitidos a cualquier rol autenticado
+ * (ADMIN y AYUDANTE). Se usa para operaciones operativas cotidianas como
+ * registrar/corregir pagos o generar facturas/recibos.
+ */
+export function requireStaff<TArgs extends unknown[]>(
+  handler: IpcHandler<TArgs>
+): IpcHandler<TArgs> {
+  return requireRole<TArgs>(['ADMIN', 'AYUDANTE'], handler)
+}
+
 function authError(error: string): ApiResponse<never> {
   return { success: false, error }
 }

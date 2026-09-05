@@ -4,7 +4,7 @@
 > **Stack**: Electron + React 19 + TypeScript + Tailwind CSS + Vite  
 > **Base de datos**: SQLite (Prisma ORM)  
 > **Estado**: Zustand + TanStack Query  
-> **Versión**: 1.0.0
+> **Versión**: 2.0.0
 
 ---
 

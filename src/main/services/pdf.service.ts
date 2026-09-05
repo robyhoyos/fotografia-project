@@ -19,6 +19,7 @@ interface ReceiptData {
   businessTagline?: string
   pdfPageSize?: 'A4' | 'Letter' | 'Legal'
   pdfAccentColor?: string
+  businessLogoBase64?: string
   eventName: string
   eventDate: string
   eventLocation: string | null
@@ -204,12 +205,31 @@ export async function generateReceiptPDF(
     // ─── Masthead ────────────────────────────────────────────────
     let y = 42
 
-    // Marca (izquierda): acento en el rombo, wordmark con tracking
-    doc.circle(MARGIN + 4, y + 9, 2.6).fillColor(accent).fill()
-    doc.font(FONT_BOLD).fontSize(21).fillColor(C_INK)
-      .text(brandName.toUpperCase(), MARGIN + 13, y, { width: 240, characterSpacing: 1.4, lineBreak: false })
-    doc.font(FONT).fontSize(8).fillColor(C_LABEL)
-      .text(brandTagline.toUpperCase(), MARGIN + 13, y + 24, { width: 260, characterSpacing: 1.6, lineBreak: false })
+    // Marca (izquierda): rombo de acento + wordmark con tracking.
+    // Si hay logo del negocio configurado, se dibuja en su lugar.
+    const hasLogo = !!(data.businessLogoBase64?.trim() && data.businessLogoBase64!.trim().length > 20)
+    const drawBrandMark = () => {
+      doc.circle(MARGIN + 4, y + 9, 2.6).fillColor(accent).fill()
+      doc.font(FONT_BOLD).fontSize(21).fillColor(C_INK)
+        .text(brandName.toUpperCase(), MARGIN + 13, y, { width: 240, characterSpacing: 1.4, lineBreak: false })
+      doc.font(FONT).fontSize(8).fillColor(C_LABEL)
+        .text(brandTagline.toUpperCase(), MARGIN + 13, y + 24, { width: 260, characterSpacing: 1.6, lineBreak: false })
+    }
+
+    if (hasLogo) {
+      try {
+        const logoBuf = Buffer.from(data.businessLogoBase64 as string, 'base64')
+        doc.image(logoBuf, MARGIN, y + 2, { fit: [92, 44] })
+        doc.font(FONT_BOLD).fontSize(21).fillColor(C_INK)
+          .text(brandName.toUpperCase(), MARGIN + 102, y + 4, { width: 200, characterSpacing: 1.4, lineBreak: false })
+        doc.font(FONT).fontSize(8).fillColor(C_LABEL)
+          .text(brandTagline.toUpperCase(), MARGIN + 102, y + 28, { width: 220, characterSpacing: 1.6, lineBreak: false })
+      } catch {
+        drawBrandMark()
+      }
+    } else {
+      drawBrandMark()
+    }
 
     // Título del recibo (derecha) con tab de acento
     doc.rect(RIGHT - 30, y - 4, 30, 3).fillColor(accent).fill()

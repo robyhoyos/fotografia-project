@@ -11,12 +11,16 @@ import { useThemeTokens } from '../../lib/theme'
 import { useDashboardStats } from '../../hooks/useDashboard'
 import { useReceivables } from '../../hooks/useAlerts'
 import { formatCOP } from '../../lib/format'
+import { EventCategoryLabels } from '../../../../../shared/schemas/event.schema'
 import type { StoredEvent } from '../../../../../shared/types/ipc'
 
 const CATEGORIES = [
   { value: 'SACRAMENTAL', label: 'Sacramental', badge: 'badgeAmber' as const },
   { value: 'ESCOLAR', label: 'Escolar', badge: 'badgeBlue' as const },
   { value: 'ESTUDIO', label: 'Estudio', badge: 'badgePurple' as const },
+  { value: 'VASOS_Y_CAMISETAS', label: 'Vasos y Camisetas', badge: 'badgeOrange' as const },
+  { value: 'BODAS_Y_15', label: 'Bodas y 15 años', badge: 'badgeRed' as const },
+  { value: 'MARKETING_DIGITAL', label: 'Marketing Digital', badge: 'badgeBlue' as const },
 ]
 
 export function StatsDashboard() {
@@ -27,8 +31,17 @@ export function StatsDashboard() {
 
   const [category, setCategory] = useState('')
 
+  type CategoryFilter =
+    | 'SACRAMENTAL'
+    | 'ESCOLAR'
+    | 'ESTUDIO'
+    | 'VASOS_Y_CAMISETAS'
+    | 'BODAS_Y_15'
+    | 'MARKETING_DIGITAL'
+    | undefined
+
   const { data, isLoading, isError, error, refetch } = useDashboardStats({
-    category: (category || undefined) as 'SACRAMENTAL' | 'ESCOLAR' | 'ESTUDIO' | undefined,
+    category: (category || undefined) as CategoryFilter,
   })
 
   const openEvent = (event: StoredEvent) => {
@@ -210,7 +223,7 @@ export function StatsDashboard() {
                             <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${
                               t[CATEGORIES.find((c) => c.value === event.category)?.badge || 'badgeGray']
                             }`}>
-                              {CATEGORIES.find((c) => c.value === event.category)?.label || event.category}
+                              {EventCategoryLabels[event.category] || CATEGORIES.find((c) => c.value === event.category)?.label || event.category}
                             </span>
                           </td>
                           <td className={`px-4 py-3 text-sm font-medium ${t.textPrimary}`}>

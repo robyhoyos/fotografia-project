@@ -16,5 +16,7 @@ export function useRole() {
     isAdmin,
     // true cuando el usuario NO puede modificar datos (rol ayudante)
     readOnly: !isAdmin,
+    // true cuando puede gestionar pagos y generar facturas (ADMIN y AYUDANTE)
+    canManagePayments: isAdmin || role === 'AYUDANTE',
   }
 }

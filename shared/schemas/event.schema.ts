@@ -10,6 +10,9 @@ export const EventCategorySchema = z.enum([
   'SACRAMENTAL',
   'ESCOLAR',
   'ESTUDIO',
+  'VASOS_Y_CAMISETAS',
+  'BODAS_Y_15',
+  'MARKETING_DIGITAL',
 ])
 
 export const EventSubtypeSchema = z.enum([
@@ -27,7 +30,49 @@ export const EventSubtypeSchema = z.enum([
   'RETRATO_INDIVIDUAL',
   'BOOK_FOTOGRAFICO',
   'EVENTO_CORPORATIVO',
+  // Vasos y Camisetas
+  'VASOS',
+  'CAMISETAS',
+  // Bodas y 15 años
+  'QUINCE',
+  // Marketing Digital
+  'VIDEO',
+  'DISENO',
+  'FOTOGRAFIA',
+  'CORPORATIVO',
 ])
+
+// ─── Labels de categorías y subtipos (fuente única para la UI) ───────
+
+export const EventCategoryLabels: Record<string, string> = {
+  SACRAMENTAL: 'Sacramental',
+  ESCOLAR: 'Escolar',
+  ESTUDIO: 'Estudio',
+  VASOS_Y_CAMISETAS: 'Vasos y Camisetas',
+  BODAS_Y_15: 'Bodas y 15 años',
+  MARKETING_DIGITAL: 'Marketing Digital',
+}
+
+export const EventSubtypeLabels: Record<string, string> = {
+  BODA: 'Boda',
+  COMUNION: 'Comunión',
+  BAUTIZO: 'Bautizo',
+  CONFIRMACION: 'Confirmación',
+  RETRATO_GRUPO: 'Retrato Grupo',
+  ANUARIO: 'Anuario',
+  GRADUACION: 'Graduación',
+  RETRATO_FAMILIAR: 'Retrato Familiar',
+  RETRATO_INDIVIDUAL: 'Retrato Individual',
+  BOOK_FOTOGRAFICO: 'Book Fotográfico',
+  EVENTO_CORPORATIVO: 'Evento Corporativo',
+  VASOS: 'Vasos',
+  CAMISETAS: 'Camisetas',
+  QUINCE: 'Quince años',
+  VIDEO: 'Video',
+  DISENO: 'Diseño',
+  FOTOGRAFIA: 'Fotografía',
+  CORPORATIVO: 'Corporativo',
+}
 
 // ─── Schema: Crear Evento ───────────────────────────────────────────
 
@@ -105,4 +150,7 @@ export const CategorySubtypeMap: Record<string, string[]> = {
     'BOOK_FOTOGRAFICO',
     'EVENTO_CORPORATIVO',
   ],
+  VASOS_Y_CAMISETAS: ['VASOS', 'CAMISETAS'],
+  BODAS_Y_15: ['BODA', 'QUINCE'],
+  MARKETING_DIGITAL: ['VIDEO', 'DISENO', 'FOTOGRAFIA', 'CORPORATIVO'],
 }

@@ -148,6 +148,7 @@ export class ParticipantRepository {
         cedula: data.cedula ?? null,
         phone: data.phone ?? null,
         email: data.email ?? null,
+        address: data.address ?? null,
         notes: data.notes ?? null,
         quantity,
         unitPrice,
@@ -171,6 +172,7 @@ export class ParticipantRepository {
       ...(data.cedula !== undefined && { cedula: data.cedula }),
       ...(data.phone !== undefined && { phone: data.phone }),
       ...(data.email !== undefined && { email: data.email }),
+      ...(data.address !== undefined && { address: data.address }),
       ...(data.notes !== undefined && { notes: data.notes }),
       ...(data.status && { status: data.status as ParticipantStatus }),
       ...(data.paymentStatus && {
@@ -311,6 +313,7 @@ export class ParticipantRepository {
               cedula: row.cedula ?? null,
               phone: row.phone ?? null,
               email: row.email ?? null,
+              address: row.address ?? null,
               quantity: row.quantity,
               barcode: this.generateBarcode(),
             },

@@ -90,3 +90,29 @@ export function useDeletePayment() {
     },
   })
 }
+
+/**
+ * @hook useCorrectPayment
+ * @description Deshace el pago más reciente del participante (el que marcó
+ * "PAGO TOTAL" por error) y recalcula el saldo. Invalida caché del historial.
+ */
+export function useCorrectPayment() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (data: { participantId: string }) => {
+      const response = await window.api.payments.correct(data)
+      if (!response.success) {
+        throw new Error(response.error || 'Error al corregir el pago')
+      }
+      return response.data
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: paymentKeys.byParticipant(variables.participantId),
+      })
+      queryClient.invalidateQueries({ queryKey: ['participants'] })
+      queryClient.invalidateQueries({ queryKey: ['alerts'] })
+    },
+  })
+}

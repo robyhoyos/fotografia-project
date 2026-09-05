@@ -5,13 +5,18 @@
 // UX: editor de tags, color picker, selector de carpeta, selects de
 // categoría/subtipo autocorregidos, confirmaciones y guardia de cambios.
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useUIStore } from '../stores/ui.store'
 import { useSettings, useUpdateSettings, useResetSettings } from '../hooks/useSettings'
 import { useToast } from '../hooks/useToast'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
 import { UsersSection } from '../components/settings/UsersSection'
-import { CategorySubtypeMap } from '../../../../shared/schemas/event.schema'
+import {
+  CategorySubtypeMap,
+  EventCategoryLabels,
+  EventSubtypeLabels,
+} from '../../../../shared/schemas/event.schema'
 
 // Orden en que se muestran las secciones (las desconocidas van al final)
 const SECTION_ORDER = ['negocio', 'eventos', 'entregas']
@@ -30,26 +35,6 @@ const CATEGORY_LABELS: Record<string, string> = {
 }
 
 const CATEGORY_OPTIONS = Object.keys(CategorySubtypeMap)
-
-const EVENT_CATEGORY_LABELS: Record<string, string> = {
-  SACRAMENTAL: 'Sacramental',
-  ESCOLAR: 'Escolar',
-  ESTUDIO: 'Estudio',
-}
-
-const SUBTYPE_LABELS: Record<string, string> = {
-  BODA: 'Boda',
-  COMUNION: 'Comunión',
-  BAUTIZO: 'Bautizo',
-  CONFIRMACION: 'Confirmación',
-  RETRATO_GRUPO: 'Retrato de grupo',
-  ANUARIO: 'Anuario',
-  GRADUACION: 'Graduación',
-  RETRATO_FAMILIAR: 'Retrato familiar',
-  RETRATO_INDIVIDUAL: 'Retrato individual',
-  BOOK_FOTOGRAFICO: 'Book fotográfico',
-  EVENTO_CORPORATIVO: 'Evento corporativo',
-}
 
 const PAGE_SIZE_OPTIONS = ['A4', 'Letter', 'Legal']
 
@@ -204,7 +189,7 @@ export function SettingsPage() {
         >
           {CATEGORY_OPTIONS.map((cat) => (
             <option key={cat} value={cat}>
-              {EVENT_CATEGORY_LABELS[cat] || cat}
+              {EventCategoryLabels[cat] || cat}
             </option>
           ))}
         </select>
@@ -223,7 +208,7 @@ export function SettingsPage() {
         >
           {options.map((st) => (
             <option key={st} value={st}>
-              {SUBTYPE_LABELS[st] || st}
+              {EventSubtypeLabels[st] || st}
             </option>
           ))}
         </select>
@@ -367,6 +352,16 @@ export function SettingsPage() {
                   </div>
 
                   <div className="space-y-4">
+                    {category === 'negocio' && (
+                      <div>
+                        <label className={labelClass}>Logo del negocio</label>
+                        <p className={`${descClass} mb-1`}>
+                          La imagen que identifica tu estudio. Aparece en el menú lateral y en la
+                          cabecera de los recibos.
+                        </p>
+                        <LogoField value={getValue('business_logo', '')} theme={theme} />
+                      </div>
+                    )}
                     {items.map((item) => (
                       <div key={item.key}>
                         <label className={labelClass}>{item.label}</label>
@@ -421,6 +416,134 @@ export function SettingsPage() {
 }
 
 // ─── Sub-componentes de campos ─────────────────────────────────────
+
+/**
+ * @component LogoField
+ * @description Subida y vista previa del logo del negocio (PNG/JPG).
+ * Guarda al instante cuando el ADMIN elige un archivo (no participa del
+ * flujo "Cambios sin guardar", se aplica inmediatamente a la barra lateral
+ * y a los recibos).
+ */
+function LogoField({ value, theme }: { value: string; theme: 'dark' | 'light' }) {
+  const { success: toastSuccess, error: toastError } = useToast()
+  const queryClient = useQueryClient()
+  const fileRef = useRef<HTMLInputElement>(null)
+  const [preview, setPreview] = useState<string | null>(
+    value && value.length > 20 ? `data:image/png;base64,${value}` : null
+  )
+  const [busy, setBusy] = useState(false)
+
+  const refreshSettings = () => {
+    queryClient.invalidateQueries({ queryKey: ['settings'] })
+  }
+
+  const releaseFileInput = () => {
+    if (fileRef.current) fileRef.current.value = ''
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) {
+      releaseFileInput()
+      return
+    }
+
+    setBusy(true)
+    const reader = new FileReader()
+    reader.onload = async () => {
+      try {
+        const res = await window.api.settings.setLogo(reader.result as string)
+        if (res.success) {
+          const logo = await window.api.settings.getLogo()
+          setPreview(logo.success && logo.data?.dataUrl ? logo.data.dataUrl : null)
+          refreshSettings()
+          toastSuccess('Logo guardado', 'Tu marca ahora aparece en la barra lateral y en los recibos')
+        } else {
+          toastError('No se pudo guardar el logo', res.error || 'Revisa el formato del archivo')
+        }
+      } catch (err) {
+        toastError('Error al guardar el logo', (err as Error).message)
+      } finally {
+        setBusy(false)
+        releaseFileInput()
+      }
+    }
+    reader.onerror = () => {
+      setBusy(false)
+      toastError('No se pudo leer el archivo', 'Intenta con otra imagen')
+      releaseFileInput()
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleRemove = async () => {
+    setBusy(true)
+    try {
+      const res = await window.api.settings.removeLogo()
+      if (res.success) {
+        setPreview(null)
+        refreshSettings()
+        toastSuccess('Logo eliminado', 'Volverá a mostrarse el nombre del negocio')
+      } else {
+        toastError('No se pudo quitar el logo', res.error || '')
+      }
+    } catch (err) {
+      toastError('Error', (err as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-4">
+        <div
+          className={`flex h-16 w-16 items-center justify-center overflow-hidden rounded-lg border ${
+            theme === 'dark' ? 'border-gray-700 bg-gray-800' : 'border-gray-300 bg-gray-100'
+          }`}
+        >
+          {preview ? (
+            <img src={preview} alt="Logo del negocio" className="max-h-full max-w-full object-contain" />
+          ) : (
+            <span className={`text-[10px] ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>Sin logo</span>
+          )}
+        </div>
+        <div className="flex flex-col gap-2 text-sm">
+          <label className={`inline-flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+            theme === 'dark'
+              ? 'border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700'
+              : 'border-gray-300 bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}>
+            {busy ? 'Guardando...' : 'Elegir imagen...'}
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              className="hidden"
+              onChange={handleFileChange}
+              disabled={busy}
+            />
+          </label>
+          {preview && (
+            <button
+              type="button"
+              onClick={handleRemove}
+              disabled={busy}
+              className={`text-xs transition-colors disabled:opacity-50 ${
+                theme === 'dark' ? 'text-gray-500 hover:text-red-400' : 'text-gray-400 hover:text-red-600'
+              }`}
+            >
+              Quitar logo
+            </button>
+          )}
+        </div>
+      </div>
+      <p className={`text-[11px] ${theme === 'dark' ? 'text-gray-600' : 'text-gray-400'}`}>
+        Recomendado: PNG con fondo transparente de 512×512 px. Se redimensiona automáticamente.
+      </p>
+    </div>
+  )
+}
 
 /**
  * @component DatabaseInfoCard

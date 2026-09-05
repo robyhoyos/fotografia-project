@@ -26,7 +26,7 @@ import type {
   RawParticipant,
   RawListParticipants,
 } from '../types/raw'
-import { requireAdmin } from '../auth/permissions'
+import { requireAdmin, requireStaff } from '../auth/permissions'
 
 /**
  * @function registerParticipantHandlers
@@ -294,7 +294,7 @@ export function registerParticipantHandlers(
    */
   ipcMain.handle(
     channels.BULK_UPDATE_PAYMENT,
-    requireAdmin(
+    requireStaff(
       async (_, payload): Promise<ApiResponse<BulkUpdateResult>> => {
         try {
           const data = BulkUpdatePaymentSchema.parse(payload)

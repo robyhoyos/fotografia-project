@@ -14,6 +14,7 @@ export function useGenerateReceipt() {
       businessTagline?: string
       pdfPageSize?: 'A4' | 'Letter' | 'Legal'
       pdfAccentColor?: string
+      businessLogoBase64?: string
       eventName: string
       eventDate: string
       eventLocation: string | null

@@ -35,4 +35,13 @@ export class PaymentService {
   async delete(paymentId: string) {
     return this.paymentRepo.delete(paymentId)
   }
+
+  /**
+   * @method correct
+   * @description Deshace el pago más reciente del participante (registrado por
+   * error, p.ej. un 'PAGO_TOTAL') y recalcula el saldo y el estado de pago.
+   */
+  async correct(participantId: string) {
+    return this.paymentRepo.correct(participantId)
+  }
 }

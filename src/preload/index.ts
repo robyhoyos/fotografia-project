@@ -341,6 +341,15 @@ const api = {
      */
     delete: (payload: { id: string }) =>
       ipcRenderer.invoke(IPC_CHANNELS.PAYMENTS.DELETE, payload),
+
+    /**
+     * @description Corrige el pago del participante: deshace el pago más
+     * reciente (por error) y recalcula el saldo y estado de pago
+     * @param payload - { participantId: string }
+     * @returns ApiResponse<PaymentCorrectionResult>
+     */
+    correct: (payload: { participantId: string }) =>
+      ipcRenderer.invoke(IPC_CHANNELS.PAYMENTS.CORRECT, payload),
   },
 
   // ─── PDF ──────────────────────────────────────────────────
@@ -411,6 +420,25 @@ const api = {
      */
     resetAll: () =>
       ipcRenderer.invoke(IPC_CHANNELS.SETTINGS.RESET_ALL),
+
+    /**
+     * @description Guarda el logo del negocio (solo ADMIN)
+     * @param dataUrl - data URL de la imagen o base64
+     */
+    setLogo: (dataUrl: string) =>
+      ipcRenderer.invoke(IPC_CHANNELS.SETTINGS.SET_LOGO, dataUrl),
+
+    /**
+     * @description Obtiene el logo del negocio como data URL (o null)
+     */
+    getLogo: () =>
+      ipcRenderer.invoke(IPC_CHANNELS.SETTINGS.GET_LOGO),
+
+    /**
+     * @description Elimina el logo del negocio (solo ADMIN)
+     */
+    removeLogo: () =>
+      ipcRenderer.invoke(IPC_CHANNELS.SETTINGS.REMOVE_LOGO),
   },
 
   // ─── Dashboard ──────────────────────────────────────────
