@@ -452,7 +452,7 @@ export async function generateReceiptPDF(
     }
 
     // ─── Footer ────────────────────────────────────────────────
-    const footerY = Math.min(Math.max(y + 20, 740), 795)
+    const footerY = Math.min(Math.max(y + 20, 740), 745)
     drawHR(footerY)
 
     doc.font(FONT).fontSize(8).fillColor(C_MUTED)
@@ -463,6 +463,8 @@ export async function generateReceiptPDF(
       )
     doc.font(FONT_BOLD).fontSize(8.5).fillColor(C_LABEL)
       .text(`${brandName.toUpperCase()} — ${brandTagline.toUpperCase()}`, MARGIN, footerY + 24, { align: 'center', characterSpacing: 0.8 })
+    doc.font(FONT).fontSize(7).fillColor(C_MUTED)
+      .text('Software de gestión desarrollado por Roby Hoyos · robyhoyos@gmail.com', MARGIN, footerY + 38, { align: 'center', characterSpacing: 0.4 })
 
     doc.end()
 

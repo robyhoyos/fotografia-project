@@ -251,8 +251,10 @@ export function Sidebar({ activeView, onNavigate }: SidebarProps) {
       </div>
 
       <div className="border-t border-gray-800/50 px-4 py-4">
-        <p className="text-[10px] text-gray-600 text-center">
-          v1.0.0 — Portfolio Photography
+        <p className="text-[10px] text-gray-600 text-center leading-relaxed">
+          Desarrollado por Roby Hoyos
+          <br />
+          <span className="text-[9px] text-gray-700">robyhoyos@gmail.com</span>
         </p>
       </div>
 
